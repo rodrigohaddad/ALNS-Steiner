@@ -6,8 +6,12 @@ from alns import ALNS
 
 
 class SimulatedAnnealing:
-    def __init__(self, steps, temperature,
-                 t_function, initial_state, start=1):
+    def __init__(self,
+                 initial_state,
+                 steps,
+                 temperature,
+                 t_function,
+                 start=1):
         self.start = start
         self.temperature = temperature
         self.t_function = t_function
@@ -20,7 +24,7 @@ class SimulatedAnnealing:
         self.alns = ALNS()
 
     def evaluate_state(self, candidate):
-        # calculate route prize
+        # calculate route cost
         return 0
 
     @staticmethod
@@ -63,7 +67,7 @@ class SimulatedAnnealing:
                     curr_state = self.choose_next_state_metropolis(metropolis,
                                                                    curr_state,
                                                                    candidate)
-            curr_temp = self.t_function(self.temperature)
+            curr_temp = self.t_function(curr_temp, self.temperature)
             self.list_temps.append(curr_temp)
             self.list_evals.append(best_eval)
 

@@ -1,6 +1,7 @@
 # %%
 import re
 import networkx as nx
+import matplotlib.pyplot as plt
 
 
 def plot_graph(G: nx.Graph) -> None:
@@ -13,6 +14,7 @@ def plot_graph(G: nx.Graph) -> None:
     pos = nx.spring_layout(G)
     nx.draw_networkx(G, pos=pos, with_labels=1)
     nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=labels)
+    plt.savefig('plotgraph.png', dpi=200, bbox_inches='tight')
 
 
 def parse_file(file_name: str) -> nx.Graph:
@@ -56,7 +58,7 @@ def parse_file(file_name: str) -> nx.Graph:
 
 
 if __name__ == "__main__":
-    #test_file = "data/steinc1-wmax_100-seed_33000-gw.dat"
+    # test_file = "data/steinc1-wmax_100-seed_33000-gw.dat"
     test_file = "data/test.edges"
 
     G = nx.Graph()
