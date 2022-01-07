@@ -32,7 +32,7 @@ def main():
 
     sa = SimulatedAnnealing(initial_state=initial_state,
                             **params)
-    sa.simulate()
+    # sa.simulate()
 
 
 if __name__ == "__main__":
