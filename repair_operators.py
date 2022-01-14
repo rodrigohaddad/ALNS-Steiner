@@ -22,12 +22,12 @@ def greedy_initial_solution(path: nx.Graph) -> nx.Graph:
     curr_node = (random.choice(list(path.nodes)))
     initial_solution.add_node(curr_node)
     while True:
-        next_cost = {n: (n - e['weight']) for n, e in path[curr_node].items()}
+        next_cost = {n: (n - e['cost']) for n, e in path[curr_node].items()}
         nc_sorted = sorted(next_cost.items(), key=lambda x: x[1], reverse=True)
         better_node = __is_already_visited(nc_sorted, initial_solution)
         if not better_node:
             break
-        initial_solution.add_edge(curr_node, better_node, weight=path[curr_node][better_node]['weight'])
+        initial_solution.add_edge(curr_node, better_node, cost=path[curr_node][better_node]['cost'])
         curr_node = better_node
 
     plot_graph(initial_solution)
