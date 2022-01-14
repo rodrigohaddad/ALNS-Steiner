@@ -1,10 +1,12 @@
 import pickle
 import repair_operators as ro
+import matplotlib.pyplot as plt
 
-filename = "data/generated-pickle/toy_generated2.pickle"
+from utils import plot_graph
 
-graph = pickle.load( open( filename, "rb" ) )
-
-ro.greedy_initial_solution(graph)
-
-
+if __name__ == "__main__":
+    filename = "data/toys/toy_generated-1.pickle"
+    graph = pickle.load(open(filename, "rb"))
+    plot_graph(graph)
+    plt.show()
+    ro.greedy_initial_solution(graph)

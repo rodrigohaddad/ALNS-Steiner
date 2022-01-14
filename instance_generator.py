@@ -8,10 +8,10 @@ def generate_random_steiner(
     num_nodes=10,
     num_edges=10,
     max_node_degree=10,
-    min_prize=0,
+    min_prize=1,
     max_prize=100,
     num_terminals=5,
-    min_edge_cost=0,
+    min_edge_cost=1,
     max_edge_cost=10,
     cost_as_length=False,
     max_iter=100,
@@ -152,7 +152,7 @@ def generate_random_steiner(
 
             # Seleciona um nó qualquer do maior componente
             v = list(graph_connected_components[0])[
-                random.randint(0, len(graph_connected_components[0]))]
+                random.randint(0, len(graph_connected_components[0])-1)]
 
             # Define aresta e custo
             edge = (u, v)

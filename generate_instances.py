@@ -3,7 +3,12 @@ import matplotlib.pyplot as plt
 from utils import plot_graph
 import pickle
 
-graph, _ = ig.generate_random_steiner()
-plot_graph(graph)
-plt.show()
-pickle.dump(graph, open("toy_generated.pickle", "wb"))
+
+def generate_multiple_instances(n=10):
+    for i in range(1, n+1):
+        graph, _ = ig.generate_random_steiner()
+        pickle.dump(graph, open(f"data/toys/toy_generated-{i}.pickle", "wb"))
+
+
+if __name__ == "__main__":
+    generate_multiple_instances(n=10)

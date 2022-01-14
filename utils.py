@@ -8,7 +8,7 @@ def plot_graph(G: nx.Graph) -> None:
     """
     Plots the given graph with its weights
     """
-    labels = {g[:-1]:g[-1]["cost"] 
+    labels = {g[:-1]:g[-1]["cost"]
         for g in G.edges(data=True)}
 
     pos = nx.spring_layout(G)

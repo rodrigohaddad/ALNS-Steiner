@@ -1,4 +1,4 @@
-from repair_operators import greedy_repair
+from repair_operators import greedy_repair, greedy_initial_solution
 from simmulated_annealing import SimulatedAnnealing
 from utils import parse_file
 from math import log
@@ -24,7 +24,7 @@ def t_function_3(t, t0, a=2000, b=1000):
 def main():
     G = parse_file("data/test.edges")
 
-    initial_state = greedy_repair(G)
+    initial_state = greedy_initial_solution(G)
 
     params = {'steps': 5000,
               'temperature': 250000,

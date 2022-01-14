@@ -1,36 +1,44 @@
 import networkx as nx
 import random
-
+import matplotlib.pyplot as plt
 from utils import plot_graph
 
 
-def __is_already_visited(nc_sorted: list,
+def __is_already_visited(nc_sorted: dict,
                          initial_solution: nx.Graph) -> int:
-    for nc in nc_sorted:
-        if nc[0] not in initial_solution.nodes():
-            return nc[0]
-    return 0
+    for nc, _ in nc_sorted.items():
+        if nc not in initial_solution.nodes():
+            return nc
+    return -1
 
 
-def greedy_initial_solution(path: nx.Graph) -> nx.Graph:
+def greedy_initial_solution(path: nx.Graph, max_tries: int = 100) -> nx.Graph:
     """
        Returns a greedy initial solution for prize collecting.
        It visits the most expensive nodes in relation to its path cost
        and stops when the only possible next node was already visited.
     """
-    initial_solution = nx.Graph()
-    curr_node = (random.choice(list(path.nodes)))
-    initial_solution.add_node(curr_node)
-    while True:
-        next_cost = {n: (n - e['cost']) for n, e in path[curr_node].items()}
-        nc_sorted = sorted(next_cost.items(), key=lambda x: x[1], reverse=True)
-        better_node = __is_already_visited(nc_sorted, initial_solution)
-        if not better_node:
-            break
-        initial_solution.add_edge(curr_node, better_node, cost=path[curr_node][better_node]['cost'])
-        curr_node = better_node
+    terminals_n = [n for n, data in path.nodes(data=True) if data['terminal']]
+    for t in range(max_tries):
+        initial_solution = nx.Graph()
+        curr_node = random.choice(terminals_n)
+        initial_solution.add_node(curr_node)
+        while True:
+            next_cost = {n: (n - e['cost'], path.nodes[n]['terminal']) for n, e in path[curr_node].items()}
+            nc_sorted = dict(sorted(next_cost.items(), key=lambda x: x[1], reverse=True))
+            better_node = __is_already_visited(nc_sorted, initial_solution)
+            if better_node == -1:
+                break
+            initial_solution.add_edge(curr_node,
+                                      better_node,
+                                      cost=path[curr_node][better_node]['cost'])
+            curr_node = better_node
 
+        if all(n in list(initial_solution.nodes) for n in terminals_n):
+            break
     plot_graph(initial_solution)
+    plt.show()
+
     return initial_solution
 
 
