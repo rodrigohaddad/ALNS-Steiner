@@ -19,7 +19,7 @@ def is_acceptable(state):
 
 def plot_graph(G: nx.Graph):
     """
-    Plots the given graph with its weights
+    Plots the given graph with its costs
     """
     labels = {g[:-1]:g[-1]["cost"]
         for g in G.edges(data=True)}
@@ -64,7 +64,7 @@ def parse_file(file_name: str) -> nx.Graph:
             else:
                 edge.append(float(t))
                 G.add_edge(edge[0], edge[1], 
-                    weight=edge[2])
+                    cost=edge[2])
                 edge = []
 
 
@@ -76,10 +76,10 @@ if __name__ == "__main__":
     test_file = "data/test.edges"
 
     G = nx.Graph()
-    G.add_edge('A', 'B', weight=4)
-    G.add_edge('B', 'D', weight=2)
-    G.add_edge('A', 'C', weight=3)
-    G.add_edge('C', 'D', weight=4)
+    G.add_edge('A', 'B', cost=4)
+    G.add_edge('B', 'D', cost=2)
+    G.add_edge('A', 'C', cost=3)
+    G.add_edge('C', 'D', cost=4)
     plot_graph(G)
 
     G = parse_file(test_file)
