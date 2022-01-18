@@ -1,11 +1,13 @@
+import networkx as nx
+
 degree_of_destruction = 0.25
 
 
-def edges_to_remove(state):
+def edges_to_remove(state: nx.Graph) -> int:
     return int(len(state.edges) * degree_of_destruction)
 
 
-def random_removal(current, random_state):
+def random_removal(current: nx.Graph, random_state) -> nx.Graph:
     destroyed = current.copy()
 
     for idx in random_state.choice(len(destroyed.nodes),
@@ -16,7 +18,7 @@ def random_removal(current, random_state):
     return destroyed
 
 
-def worst_removal(current):
+def worst_removal(current: nx.Graph) -> nx.Graph:
     destroyed = current.copy()
 
     worst_edges = sorted([])
@@ -27,5 +29,5 @@ def worst_removal(current):
     return destroyed
 
 
-def shawn_removal(current):
+def shawn_removal(current: nx.Graph) -> nx.Graph:
     return current
