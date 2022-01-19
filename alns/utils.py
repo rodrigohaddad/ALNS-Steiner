@@ -25,8 +25,12 @@ def plot_graph(G: nx.Graph, output='plotgraph.png', terminals=True, solution=Non
     labels = {g[:-1]:g[-1]["cost"]
         for g in G.edges(data=True)}
 
+    node_labels = {
+        node:data['prize'] for node, data in G.nodes(data=True)
+    }
+
     pos = nx.spring_layout(G)
-    nx.draw_networkx(G, pos=pos, with_labels=1)
+    nx.draw_networkx(G, pos=pos, labels=node_labels)
     nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=labels)
     if solution is not None:
         nx.draw_networkx_edges(G, pos, edgelist=solution.edges(), edge_color='r', width=2)
