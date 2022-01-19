@@ -34,9 +34,10 @@ def greedy_initial_solution(path: nx.Graph, max_tries: int = 350) -> nx.Graph:
                                       cost=path[curr_node][better_node]['cost'])
             curr_node = better_node
 
-        # if all(n in list(initial_solution.nodes) for n in terminals_n):
-        #     break
-    plot_graph(initial_solution)
+        if all(n in list(initial_solution.nodes) for n in terminals_n):
+            break
+    pos = plot_graph(path)
+    nx.draw_networkx_edges(path, pos, edgelist=initial_solution.edges(), edge_color='r', width=2)
     plt.show()
 
     return initial_solution

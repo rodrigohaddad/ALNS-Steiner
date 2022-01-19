@@ -17,7 +17,7 @@ def is_acceptable(state):
     return 0
 
 
-def plot_graph(G: nx.Graph) -> None:
+def plot_graph(G: nx.Graph):
     """
     Plots the given graph with its weights
     """
@@ -28,6 +28,7 @@ def plot_graph(G: nx.Graph) -> None:
     nx.draw_networkx(G, pos=pos, with_labels=1)
     nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=labels)
     plt.savefig('plotgraph.png', dpi=200, bbox_inches='tight')
+    return pos
 
 
 def parse_file(file_name: str) -> nx.Graph:
