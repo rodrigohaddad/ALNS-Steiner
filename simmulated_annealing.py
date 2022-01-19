@@ -5,12 +5,15 @@ import numpy as np
 from alns import ALNS
 
 
+from typing import Any, Callable, List
+
+
 class SimulatedAnnealing:
     def __init__(self,
                  initial_state,
-                 steps,
-                 temperature,
-                 t_function,
+                 steps: int,
+                 temperature: float,
+                 t_function: Callable[[float, float], float],
                  start=1):
         self.start = start
         self.temperature = temperature
@@ -28,13 +31,15 @@ class SimulatedAnnealing:
         return 0
 
     @staticmethod
-    def choose_next_state_metropolis(metropolis, curr_state, candidate_state):
+    def choose_next_state_metropolis(metropolis: float,
+            curr_state, candidate_state):
         if np.random.uniform() <= metropolis:
             return candidate_state
         return curr_state
 
     @staticmethod
-    def metropolis(curr_state_eval, candidate_eval, curr_temp):
+    def metropolis(curr_state_eval: float, candidate_eval: float, 
+            curr_temp: float) -> float:
         diff = candidate_eval - curr_state_eval
         met = min(exp(diff / curr_temp), 1)
         return met
@@ -44,7 +49,7 @@ class SimulatedAnnealing:
         # apply ALNS
         return 0
 
-    def simulate(self):
+    def simulate(self) -> List[Any, Any, float, float]:
         best = self.initial_state
         best_eval = self.evaluate_state(best)
         curr_state, curr_state_eval = best, best_eval

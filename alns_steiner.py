@@ -9,15 +9,15 @@ An application of adaptive large neighborhood search
 problem optimization.'''
 
 
-def t_function_1(t, t0, beta=0.9):
+def t_function_1(t: float, t0: float, beta=0.9) -> float:
     return t0 * beta ** t
 
 
-def t_function_2(t, t0, beta=0.3):
+def t_function_2(t: float, t0: float, beta=0.3) -> float:
     return t0 - beta * t
 
 
-def t_function_3(t, t0, a=2000, b=1000):
+def t_function_3(t: float, t0: float, a=2000, b=1000) -> float:
     return a / (log(t + b))
 
 
