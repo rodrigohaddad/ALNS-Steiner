@@ -17,18 +17,23 @@ def is_acceptable(state):
     return 0
 
 
-def plot_graph(G: nx.Graph):
+def plot_graph(G: nx.Graph, output='plotgraph.png', terminals=True, solution=None) -> None:
     """
     Plots the given graph with its costs
     """
+    plt.figure()
     labels = {g[:-1]:g[-1]["cost"]
         for g in G.edges(data=True)}
 
     pos = nx.spring_layout(G)
     nx.draw_networkx(G, pos=pos, with_labels=1)
     nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=labels)
-    plt.savefig('plotgraph.png', dpi=200, bbox_inches='tight')
-    return pos
+    if solution is not None:
+        nx.draw_networkx_edges(G, pos, edgelist=solution.edges(), edge_color='r', width=2)
+    if terminals:
+        terminals_n = [n for n, data in G.nodes(data=True) if data['terminal']]
+        nx.draw_networkx_nodes(G, pos, nodelist=terminals_n, node_color='green')
+    plt.savefig(output, dpi=200, bbox_inches='tight')
 
 
 def parse_file(file_name: str) -> nx.Graph:

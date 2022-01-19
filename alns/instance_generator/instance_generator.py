@@ -1,8 +1,8 @@
+import os
 import random
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-
 
 def generate_random_steiner(
     num_nodes=10,
@@ -212,3 +212,37 @@ def draw_steiner_graph(G):
         style='--',
         ax=ax
     )
+
+def export_to_dat(graph, out):
+    """
+
+    Args:
+        graph(nx.Graph): Instância do prize collecting steiner.
+    """
+    
+    path = os.path.dirname(__file__)
+    template = open(
+        os.path.join(path, 'template.dat')
+    ).read()
+
+    nodes = []
+    for n, data in graph.nodes(data=True):
+        nodes.append(
+            '\t'.join(['', f'{n}', '0.0', '0.0', f'{data["prize"]}'])
+        )
+
+    links = []
+    i = 1
+    for node1, node2, e_data in graph.edges(data=True):
+        links.append(
+            '\t'.join(['', f'{i}', f'{node1}', f'{node2}', f'{e_data["cost"]}', f'{data["prize"]}', '0.0'])
+        )
+        i += 1
+
+    output = template.format(
+        nodes = '\n'.join(nodes),
+        links = '\n'.join(links),
+    )
+
+    with open(out, 'w') as  outfile:
+        outfile.write(output)

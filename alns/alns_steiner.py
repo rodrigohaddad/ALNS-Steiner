@@ -1,6 +1,6 @@
 from alns.operators.repair_operators import greedy_initial_solution
 from simmulated_annealing.simmulated_annealing import SimulatedAnnealing
-from utils import parse_file
+from alns.utils import parse_file
 from math import log
 
 ''' ALNS for Steiner prize collecting problem

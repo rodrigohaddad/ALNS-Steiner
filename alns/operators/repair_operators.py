@@ -1,7 +1,7 @@
 import networkx as nx
 import random
 import matplotlib.pyplot as plt
-from utils import plot_graph
+from alns.utils import plot_graph
 
 
 def __is_already_visited(nc_sorted: dict,
@@ -36,10 +36,6 @@ def greedy_initial_solution(path: nx.Graph, max_tries: int = 350) -> nx.Graph:
 
         if all(n in list(initial_solution.nodes) for n in terminals_n):
             break
-    pos = plot_graph(path)
-    nx.draw_networkx_edges(path, pos, edgelist=initial_solution.edges(), edge_color='r', width=2)
-    nx.draw_networkx_nodes(path, pos, nodelist=terminals_n, node_color='green')
-    plt.show()
 
     return initial_solution
 

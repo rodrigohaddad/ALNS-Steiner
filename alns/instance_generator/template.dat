@@ -1,0 +1,6 @@
+node
+#name   v   h   type    cost
+{nodes}
+link
+#name   n1  n2  cost    source  type
+{links}
