@@ -38,6 +38,7 @@ def greedy_initial_solution(path: nx.Graph, max_tries: int = 350) -> nx.Graph:
             break
     pos = plot_graph(path)
     nx.draw_networkx_edges(path, pos, edgelist=initial_solution.edges(), edge_color='r', width=2)
+    nx.draw_networkx_nodes(path, pos, nodelist=terminals_n, node_color='green')
     plt.show()
 
     return initial_solution
