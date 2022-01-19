@@ -1,11 +1,14 @@
 import numpy as np
 import numpy.random as rnd
 
+import utils
+
 
 class ALNS:
-    def __init__(self, rnd_state=rnd.RandomState()):
+    def __init__(self, initial_solution, rnd_state=rnd.RandomState()):
         self.destroy_operators = []
         self.repair_operators = []
+        self.curr_state = self.best = self.initial_solution = initial_solution
         self.rnd_state = rnd_state
 
     def add_destroy_operator(self, operator):
@@ -21,17 +24,26 @@ class ALNS:
         return self.rnd_state.choice(np.arange(0, len(operators)),
                                      p=weights / np.sum(weights))
 
-    def decision_candidate(self, best, curr_state, repaired, criteria):
+    @staticmethod
+    def decision_candidate(best, curr_state, candidate):
+        if utils.is_acceptable(candidate):
+            if utils.evaluate(candidate) < utils.evaluate(curr_state):
+                weight = utils.BETTER
+            else:
+                weight = utils.ACCEPTED
+            curr_state = candidate
+        else:
+            weight = utils.REJECTED
+
+        if utils.evaluate(candidate) < utils.evaluate(best):
+            return candidate, candidate, utils.BEST
+        return best, curr_state, weight
 
     def run(self,
-            initial_solution,
             weights,
-            operator_evaluation,
             operator_decay,
-            criteria,
             iterations=10000):
         weights = np.asarray(weights, dtype=np.float16)
-        curr_state = best = initial_solution
         repair_weights = np.ones(len(self.repair_operators), dtype=np.float16)
         destroy_weights = np.ones(len(self.destroy_operators), dtype=np.float16)
 
@@ -44,13 +56,12 @@ class ALNS:
                                                destroy_weights)
             d_op = self.destroy_operators[d_index]
 
-            destroyed = d_op(curr_state)
+            destroyed = d_op(self.curr_state)
             repaired = r_op(destroyed)
 
-            best, curr_state, weight_index = self.decision_candidate(best,
-                                                                     curr_state,
-                                                                     repaired,
-                                                                     criteria)
+            best, curr_state, weight_index = self.decision_candidate(self.best,
+                                                                     self.curr_state,
+                                                                     repaired)
 
             destroy_weights[d_index] *= operator_decay
             destroy_weights[d_index] += (1 - operator_decay) * weights[weight_index]
@@ -58,4 +69,4 @@ class ALNS:
             repair_weights[r_index] *= operator_decay
             repair_weights[r_index] += (1 - operator_decay) * weights[weight_index]
 
-        return best
+        return self.best

@@ -3,6 +3,19 @@ import re
 import networkx as nx
 import matplotlib.pyplot as plt
 
+BEST = 0
+BETTER = 1
+ACCEPTED = 2
+REJECTED = 3
+
+
+def evaluate(state):
+    return 0
+
+
+def is_acceptable(state):
+    return 0
+
 
 def plot_graph(G: nx.Graph) -> None:
     """

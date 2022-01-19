@@ -12,7 +12,7 @@ def __is_already_visited(nc_sorted: dict,
     return -1
 
 
-def greedy_initial_solution(path: nx.Graph, max_tries: int = 100) -> nx.Graph:
+def greedy_initial_solution(path: nx.Graph, max_tries: int = 350) -> nx.Graph:
     """
        Returns a greedy initial solution for prize collecting.
        It visits the most expensive nodes in relation to its path cost
@@ -34,8 +34,8 @@ def greedy_initial_solution(path: nx.Graph, max_tries: int = 100) -> nx.Graph:
                                       cost=path[curr_node][better_node]['cost'])
             curr_node = better_node
 
-        if all(n in list(initial_solution.nodes) for n in terminals_n):
-            break
+        # if all(n in list(initial_solution.nodes) for n in terminals_n):
+        #     break
     plot_graph(initial_solution)
     plt.show()
 

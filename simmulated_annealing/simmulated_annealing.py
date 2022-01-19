@@ -1,11 +1,9 @@
 from math import exp
-from random import choices
 import numpy as np
 
-from alns import ALNS
-
-
 from typing import Any, Callable, List
+
+from alns.alns import ALNS
 
 
 class SimulatedAnnealing:
@@ -24,7 +22,7 @@ class SimulatedAnnealing:
         self.list_temps = list()
         self.state_evals = dict()
 
-        self.alns = ALNS()
+        self.alns = ALNS(self.initial_state)
 
     def evaluate_state(self, candidate):
         # calculate route cost
@@ -32,21 +30,20 @@ class SimulatedAnnealing:
 
     @staticmethod
     def choose_next_state_metropolis(metropolis: float,
-            curr_state, candidate_state):
+                                     curr_state, candidate_state):
         if np.random.uniform() <= metropolis:
             return candidate_state
         return curr_state
 
     @staticmethod
-    def metropolis(curr_state_eval: float, candidate_eval: float, 
-            curr_temp: float) -> float:
+    def metropolis(curr_state_eval: float, candidate_eval: float,
+                   curr_temp: float) -> float:
         diff = candidate_eval - curr_state_eval
         met = min(exp(diff / curr_temp), 1)
         return met
 
     def sort_state_candidate(self, curr_state):
-        self.alns.iterate(curr_state)
-        # apply ALNS
+        self.alns.run(curr_state)
         return 0
 
     def simulate(self) -> List[Any, Any, float, float]:
