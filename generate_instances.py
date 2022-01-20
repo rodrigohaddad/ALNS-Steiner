@@ -1,4 +1,5 @@
 # %%
+import re
 import os
 import pickle
 import pandas as pd
@@ -34,9 +35,15 @@ def instances_to_excel() -> None:
     """
     Saves the toy instances into an excel file
     """
+    def atoi(text):
+        return int(text) if text.isdigit() else text
+    def natural_keys(text):
+        return [ atoi(c) for c in re.split('(\d+)',text) ]
+    
     path = "data/toys/"
     file_names = [f"{path}{f}" 
         for f in os.listdir(path) if f.endswith(".pickle")]
+    file_names.sort(key=natural_keys)
     
     graphs = []
     for file_name in file_names:
