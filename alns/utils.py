@@ -3,18 +3,41 @@ import re
 import networkx as nx
 import matplotlib.pyplot as plt
 
+BEST = 0
+BETTER = 1
+ACCEPTED = 2
+REJECTED = 3
 
-def plot_graph(G: nx.Graph) -> None:
+
+def evaluate(state):
+    return 0
+
+
+def is_acceptable(state):
+    return 0
+
+
+def plot_graph(G: nx.Graph, output='plotgraph.png', terminals=True, solution=None) -> None:
     """
-    Plots the given graph with its weights
+    Plots the given graph with its costs
     """
-    labels = {g[:-1]:g[-1]["weight"] 
+    plt.figure()
+    labels = {g[:-1]:g[-1]["cost"]
         for g in G.edges(data=True)}
 
+    node_labels = {
+        node:data['prize'] for node, data in G.nodes(data=True)
+    }
+
     pos = nx.spring_layout(G)
-    nx.draw_networkx(G, pos=pos, with_labels=1)
+    nx.draw_networkx(G, pos=pos, labels=node_labels)
     nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=labels)
-    plt.savefig('plotgraph.png', dpi=200, bbox_inches='tight')
+    if solution is not None:
+        nx.draw_networkx_edges(G, pos, edgelist=solution.edges(), edge_color='r', width=2)
+    if terminals:
+        terminals_n = [n for n, data in G.nodes(data=True) if data['terminal']]
+        nx.draw_networkx_nodes(G, pos, nodelist=terminals_n, node_color='green')
+    plt.savefig(output, dpi=200, bbox_inches='tight')
 
 
 def parse_file(file_name: str) -> nx.Graph:
@@ -50,7 +73,7 @@ def parse_file(file_name: str) -> nx.Graph:
             else:
                 edge.append(float(t))
                 G.add_edge(edge[0], edge[1], 
-                    weight=edge[2])
+                    cost=edge[2])
                 edge = []
 
 
@@ -62,10 +85,10 @@ if __name__ == "__main__":
     test_file = "data/test.edges"
 
     G = nx.Graph()
-    G.add_edge('A', 'B', weight=4)
-    G.add_edge('B', 'D', weight=2)
-    G.add_edge('A', 'C', weight=3)
-    G.add_edge('C', 'D', weight=4)
+    G.add_edge('A', 'B', cost=4)
+    G.add_edge('B', 'D', cost=2)
+    G.add_edge('A', 'C', cost=3)
+    G.add_edge('C', 'D', cost=4)
     plot_graph(G)
 
     G = parse_file(test_file)
