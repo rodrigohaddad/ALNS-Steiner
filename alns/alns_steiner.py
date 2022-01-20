@@ -28,7 +28,10 @@ def main():
 
     params = {'steps': 5000,
               'temperature': 250000,
-              't_function': t_function_3}
+              't_function': t_function_3,
+              'alns_weights': [4, 2.4, 3, 1.5],
+              'alns_decay': 0.8,
+              'alns_n_iterations': 20000}
 
     sa = SimulatedAnnealing(initial_state=initial_state,
                             **params)

@@ -1,14 +1,18 @@
 import numpy as np
 import numpy.random as rnd
 
-import utils
+from alns import utils
 
 
 class ALNS:
-    def __init__(self, initial_solution, rnd_state=rnd.RandomState()):
+    def __init__(self, origin_graph,
+                 initial_solution,
+                 rnd_state=rnd.RandomState()):
         self.destroy_operators = []
         self.repair_operators = []
+        self.origin_graph = origin_graph
         self.curr_state = self.best = self.initial_solution = initial_solution
+        self.best_eval = utils.evaluate(self.origin_graph, self.curr_state)
         self.rnd_state = rnd_state
 
     def add_destroy_operator(self, operator):
@@ -24,10 +28,12 @@ class ALNS:
         return self.rnd_state.choice(np.arange(0, len(operators)),
                                      p=weights / np.sum(weights))
 
-    @staticmethod
-    def decision_candidate(best, curr_state, candidate):
+    def decision_candidate(self, best, curr_state, candidate):
+        candidate_eval = utils.evaluate(self.origin_graph, candidate)
+        curr_state_eval = utils.evaluate(self.origin_graph, curr_state)
+
         if utils.is_acceptable(candidate):
-            if utils.evaluate(candidate) < utils.evaluate(curr_state):
+            if candidate_eval < curr_state_eval:
                 weight = utils.BETTER
             else:
                 weight = utils.ACCEPTED
@@ -35,7 +41,8 @@ class ALNS:
         else:
             weight = utils.REJECTED
 
-        if utils.evaluate(candidate) < utils.evaluate(best):
+        if candidate_eval < self.best_eval:
+            self.best_eval = candidate_eval
             return candidate, candidate, utils.BEST
         return best, curr_state, weight
 

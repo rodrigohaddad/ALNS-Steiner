@@ -24,7 +24,7 @@ def worst_removal(current: nx.Graph) -> nx.Graph:
     worst_edges = sorted([])
 
     for idx in range(edges_to_remove(current)):
-        del destroyed.edges[worst_edges[-idx -1]]
+        del destroyed.edges[worst_edges[-idx - 1]]
 
     return destroyed
 
