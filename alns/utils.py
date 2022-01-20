@@ -2,6 +2,7 @@ import re
 import networkx as nx
 import matplotlib.pyplot as plt
 
+
 BEST = 0
 BETTER = 1
 ACCEPTED = 2
@@ -44,7 +45,8 @@ def plot_graph(G: nx.Graph,
     nx.draw_networkx(G, pos=pos, labels=node_labels)
     nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=labels)
     if solution is not None:
-        nx.draw_networkx_edges(G, pos, edgelist=solution.edges(), edge_color='r', width=2)
+        nx.draw_networkx_edges(G, pos,
+            edgelist=solution.edges(), edge_color='r', width=2)
     if terminals:
         terminals_n = [n for n, data in G.nodes(data=True) if data['terminal']]
         nx.draw_networkx_nodes(G, pos, nodelist=terminals_n, node_color='green')
@@ -89,18 +91,3 @@ def parse_file(file_name: str) -> nx.Graph:
 
     return G
 
-
-if __name__ == "__main__":
-    # test_file = "data/steinc1-wmax_100-seed_33000-gw.dat"
-    test_file = "data/test.edges"
-
-    G = nx.Graph()
-    G.add_edge('A', 'B', cost=4)
-    G.add_edge('B', 'D', cost=2)
-    G.add_edge('A', 'C', cost=3)
-    G.add_edge('C', 'D', cost=4)
-    plot_graph(G)
-
-    G = parse_file(test_file)
-    plot_graph(G)
-# %%
