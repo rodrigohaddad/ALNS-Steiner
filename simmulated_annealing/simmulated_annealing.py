@@ -10,8 +10,9 @@ from alns.alns import ALNS
 class SimulatedAnnealing:
     def __init__(self,
                  origin_graph: nx.Graph,
+                 origin_nodes: list,
                  initial_solution: nx.Graph,
-                 steps: int,
+                 steps_per_temperature: int,
                  temperature: float,
                  t_function: Callable[[float, float], float],
                  alns_weights: list,
@@ -22,8 +23,9 @@ class SimulatedAnnealing:
         self.start = start
         self.temperature = temperature
         self.t_function = t_function
-        self.steps = steps
+        self.steps = steps_per_temperature
         self.origin_graph = origin_graph
+        self.origin_nodes = origin_nodes
         self.initial_solution = initial_solution
         self.list_evals = list()
         self.list_temps = list()
@@ -32,7 +34,7 @@ class SimulatedAnnealing:
         self.alns_weights = alns_weights
         self.alns_decay = alns_decay
         self.alns_n_iterations = alns_n_iterations
-        self.alns = ALNS(self.origin_graph, self.initial_solution)
+        self.alns = ALNS(self.origin_graph, self.initial_solution, self.origin_nodes)
 
     @staticmethod
     def choose_next_state_metropolis(metropolis: float,
@@ -56,17 +58,17 @@ class SimulatedAnnealing:
 
     def simulate(self) -> list:
         best = self.initial_solution
-        best_eval = utils.evaluate(self.origin_graph, best)
+        best_eval = utils.evaluate(self.origin_graph, best, self.origin_nodes)
         curr_state, curr_state_eval = best, best_eval
 
         curr_temp = self.t_function(0, self.temperature)
-        self.list_temps.append(curr_temp)
         self.list_evals.append(best_eval)
 
+        temp_iter = 0
         while curr_temp > 0.001:
             for i in range(self.start, self.steps):
                 candidate = self.apply_alns()
-                candidate_eval = utils.evaluate(self.origin_graph, candidate)
+                candidate_eval = utils.evaluate(self.origin_graph, candidate, self.origin_nodes)
                 # print(curr_state, curr_state_eval, i)
 
                 if candidate_eval >= curr_state_eval:
@@ -77,9 +79,10 @@ class SimulatedAnnealing:
                     curr_state = self.choose_next_state_metropolis(metropolis,
                                                                    curr_state,
                                                                    candidate)
-            curr_temp = self.t_function(curr_temp, self.temperature)
+            curr_temp = self.t_function(temp_iter, self.temperature)
             self.list_temps.append(curr_temp)
             self.list_evals.append(best_eval)
+            temp_iter += 1
 
         print(curr_state, curr_temp)
         return [best, best_eval, self.list_temps, self.list_evals]

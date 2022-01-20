@@ -9,10 +9,11 @@ ACCEPTED = 2
 REJECTED = 3
 
 
-def evaluate(origin_graph: nx.Graph, solution: nx.Graph) -> int:
-    origin_n = [n[0] for n in origin_graph.nodes(data=True)]
+def evaluate(origin_graph: nx.Graph, solution: nx.Graph, origin_nodes=None) -> int:
+    if not origin_nodes:
+        origin_nodes = [n[0] for n in origin_graph.nodes(data=True)]
     solution_n = [n[0] for n in solution.nodes(data=True)]
-    unvisited_nodes = list(set(origin_n).difference(solution_n))
+    unvisited_nodes = list(set(origin_nodes).difference(solution_n))
 
     cost_edges = sum([e[2]["cost"]
                       for e in solution.edges(data=True)])
