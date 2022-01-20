@@ -67,7 +67,7 @@ class SimulatedAnnealing:
             for i in range(self.start, self.steps):
                 candidate = self.apply_alns()
                 candidate_eval = utils.evaluate(self.origin_graph, candidate)
-                print(curr_state, curr_state_eval, i)
+                # print(curr_state, curr_state_eval, i)
 
                 if candidate_eval >= curr_state_eval:
                     best, best_eval = candidate, candidate_eval

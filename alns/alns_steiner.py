@@ -24,7 +24,7 @@ def t_function_3(t: float, t0: float, a=2000, b=1000) -> float:
 def main():
     G = parse_file("../data/test.edges")
 
-    initial_state = greedy_initial_solution(G)
+    initial_solution = greedy_initial_solution(G)
 
     params = {'steps': 5000,
               'temperature': 250000,
@@ -33,7 +33,8 @@ def main():
               'alns_decay': 0.8,
               'alns_n_iterations': 20000}
 
-    sa = SimulatedAnnealing(initial_state=initial_state,
+    sa = SimulatedAnnealing(origin_graph=G,
+                            initial_solution=initial_solution,
                             **params)
     # sa.simulate()
 
