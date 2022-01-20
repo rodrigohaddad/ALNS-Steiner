@@ -9,11 +9,13 @@ def edges_to_remove(state: nx.Graph) -> int:
 
 def random_removal(current: nx.Graph, random_state) -> nx.Graph:
     destroyed = current.copy()
+    to_be_destroyed = list(destroyed.edges)
+    n_edges_to_remove = random_state.choice(len(to_be_destroyed),
+                                            edges_to_remove(current),
+                                            replace=False)
 
-    for idx in random_state.choice(len(destroyed.nodes),
-                                   edges_to_remove(current),
-                                   replace=False):
-        del destroyed.edges[destroyed.nodes[idx]]
+    for e in n_edges_to_remove:
+        destroyed.remove_edge(*to_be_destroyed[e])
 
     return destroyed
 

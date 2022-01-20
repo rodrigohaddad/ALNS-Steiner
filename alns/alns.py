@@ -2,24 +2,19 @@ import numpy as np
 import numpy.random as rnd
 
 from alns import utils
+from alns.operators.destroy_operators import random_removal
 
 
 class ALNS:
     def __init__(self, origin_graph,
                  initial_solution,
                  rnd_state=rnd.RandomState()):
-        self.destroy_operators = []
-        self.repair_operators = []
+        self.destroy_operators = [random_removal]
+        self.repair_operators = [random_removal]
         self.origin_graph = origin_graph
         self.curr_state = self.best = self.initial_solution = initial_solution
         self.best_eval = utils.evaluate(self.origin_graph, self.curr_state)
         self.rnd_state = rnd_state
-
-    def add_destroy_operator(self, operator):
-        self.destroy_operators.append(operator)
-
-    def add_repair_operator(self, operator):
-        self.repair_operators.append(operator)
 
     def select_random_index(self,
                             operators,
@@ -63,8 +58,8 @@ class ALNS:
                                                destroy_weights)
             d_op = self.destroy_operators[d_index]
 
-            destroyed = d_op(self.curr_state)
-            repaired = r_op(destroyed)
+            destroyed = d_op(self.curr_state, self.rnd_state)
+            repaired = r_op(destroyed, self.rnd_state)
 
             best, curr_state, weight_index = self.decision_candidate(self.best,
                                                                      self.curr_state,

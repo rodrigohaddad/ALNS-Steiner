@@ -54,8 +54,8 @@ class SimulatedAnnealing:
                                   self.alns_n_iterations)
         return candidate
 
-    def simulate(self) -> List[Any, Any, float, float]:
-        best = self.initial_state
+    def simulate(self) -> list:
+        best = self.initial_solution
         best_eval = utils.evaluate(self.origin_graph, best)
         curr_state, curr_state_eval = best, best_eval
 

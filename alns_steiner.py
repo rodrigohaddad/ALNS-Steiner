@@ -2,6 +2,7 @@ from alns.operators.repair_operators import greedy_initial_solution
 from simmulated_annealing.simmulated_annealing import SimulatedAnnealing
 from alns.utils import parse_file
 from math import log
+import pickle
 
 ''' ALNS for Steiner prize collecting problem
 An application of adaptive large neighborhood search
@@ -22,7 +23,8 @@ def t_function_3(t: float, t0: float, a=2000, b=1000) -> float:
 
 
 def main():
-    G = parse_file("../data/test.edges")
+    # G = parse_file("data/test.edges")
+    G = pickle.load(open("data/toys/toy_generated-1.pickle", "rb"))
 
     initial_solution = greedy_initial_solution(G)
 
@@ -36,7 +38,7 @@ def main():
     sa = SimulatedAnnealing(origin_graph=G,
                             initial_solution=initial_solution,
                             **params)
-    # sa.simulate()
+    sa.simulate()
 
 
 if __name__ == "__main__":
