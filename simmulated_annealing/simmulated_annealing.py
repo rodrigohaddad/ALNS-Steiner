@@ -1,32 +1,40 @@
 from math import exp
 import numpy as np
-
+import networkx as nx
 from typing import Any, Callable, List
 
+from alns import utils
 from alns.alns import ALNS
 
 
 class SimulatedAnnealing:
     def __init__(self,
-                 initial_state,
-                 steps: int,
+                 origin_graph: nx.Graph,
+                 origin_nodes: list,
+                 initial_solution: nx.Graph,
+                 steps_per_temperature: int,
                  temperature: float,
                  t_function: Callable[[float, float], float],
-                 start=1):
+                 alns_weights: list,
+                 alns_decay: float,
+                 alns_n_iterations: int,
+                 start=1,
+                 ):
         self.start = start
         self.temperature = temperature
         self.t_function = t_function
-        self.steps = steps
-        self.initial_state = initial_state
+        self.steps = steps_per_temperature
+        self.origin_graph = origin_graph
+        self.origin_nodes = origin_nodes
+        self.initial_solution = initial_solution
         self.list_evals = list()
         self.list_temps = list()
         self.state_evals = dict()
 
-        self.alns = ALNS(self.initial_state)
-
-    def evaluate_state(self, candidate):
-        # calculate route cost
-        return 0
+        self.alns_weights = alns_weights
+        self.alns_decay = alns_decay
+        self.alns_n_iterations = alns_n_iterations
+        self.alns = ALNS(self.origin_graph, self.initial_solution, self.origin_nodes)
 
     @staticmethod
     def choose_next_state_metropolis(metropolis: float,
@@ -42,24 +50,26 @@ class SimulatedAnnealing:
         met = min(exp(diff / curr_temp), 1)
         return met
 
-    def sort_state_candidate(self, curr_state):
-        self.alns.run(curr_state)
-        return 0
+    def apply_alns(self):
+        candidate = self.alns.run(self.alns_weights,
+                                  self.alns_decay,
+                                  self.alns_n_iterations)
+        return candidate
 
-    def simulate(self) -> List[Any, Any, float, float]:
-        best = self.initial_state
-        best_eval = self.evaluate_state(best)
+    def simulate(self) -> list:
+        best = self.initial_solution
+        best_eval = utils.evaluate(self.origin_graph, best, self.origin_nodes)
         curr_state, curr_state_eval = best, best_eval
 
         curr_temp = self.t_function(0, self.temperature)
-        self.list_temps.append(curr_temp)
         self.list_evals.append(best_eval)
 
+        temp_iter = 0
         while curr_temp > 0.001:
             for i in range(self.start, self.steps):
-                candidate = self.sort_state_candidate(curr_state)
-                candidate_eval = self.evaluate_state(candidate)
-                print(curr_state, curr_state_eval, i)
+                candidate = self.apply_alns()
+                candidate_eval = utils.evaluate(self.origin_graph, candidate, self.origin_nodes)
+                # print(curr_state, curr_state_eval, i)
 
                 if candidate_eval >= curr_state_eval:
                     best, best_eval = candidate, candidate_eval
@@ -69,9 +79,10 @@ class SimulatedAnnealing:
                     curr_state = self.choose_next_state_metropolis(metropolis,
                                                                    curr_state,
                                                                    candidate)
-            curr_temp = self.t_function(curr_temp, self.temperature)
+            curr_temp = self.t_function(temp_iter, self.temperature)
             self.list_temps.append(curr_temp)
             self.list_evals.append(best_eval)
+            temp_iter += 1
 
         print(curr_state, curr_temp)
         return [best, best_eval, self.list_temps, self.list_evals]
