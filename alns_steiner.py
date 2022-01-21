@@ -28,12 +28,11 @@ def main():
 
     initial_solution = greedy_initial_solution(G)
 
-    params = {'steps_per_temperature': 200,
-              'temperature': 25000,
+    params = {'temperature': 25000,
               't_function': t_function_2,
               'alns_weights': [4, 2.4, 3, 1.5],
               'alns_decay': 0.8,
-              'alns_n_iterations': 100}
+              'alns_n_iterations': 5000}
 
     origin_nodes = [n[0] for n in G.nodes(data=True)]
 

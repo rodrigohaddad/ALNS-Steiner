@@ -1,7 +1,6 @@
-from math import exp
 import numpy as np
 import networkx as nx
-from typing import Any, Callable, List
+from typing import Callable
 
 from alns import utils
 from alns.alns import ALNS
@@ -12,77 +11,54 @@ class SimulatedAnnealing:
                  origin_graph: nx.Graph,
                  origin_nodes: list,
                  initial_solution: nx.Graph,
-                 steps_per_temperature: int,
                  temperature: float,
                  t_function: Callable[[float, float], float],
                  alns_weights: list,
                  alns_decay: float,
                  alns_n_iterations: int,
-                 start=1,
                  ):
-        self.start = start
         self.temperature = temperature
         self.t_function = t_function
-        self.steps = steps_per_temperature
         self.origin_graph = origin_graph
         self.origin_nodes = origin_nodes
         self.initial_solution = initial_solution
-        self.list_evals = list()
-        self.list_temps = list()
-        self.state_evals = dict()
 
         self.alns_weights = alns_weights
         self.alns_decay = alns_decay
         self.alns_n_iterations = alns_n_iterations
+
         self.alns = ALNS(self.origin_graph, self.initial_solution, self.origin_nodes)
 
-    @staticmethod
-    def choose_next_state_metropolis(metropolis: float,
-                                     curr_state, candidate_state):
-        if np.random.uniform() <= metropolis:
-            return candidate_state
-        return curr_state
-
-    @staticmethod
-    def metropolis(curr_state_eval: float, candidate_eval: float,
-                   curr_temp: float) -> float:
-        diff = candidate_eval - curr_state_eval
-        met = min(exp(diff / curr_temp), 1)
-        return met
-
-    def apply_alns(self):
-        candidate = self.alns.run(self.alns_weights,
-                                  self.alns_decay,
-                                  self.alns_n_iterations)
-        return candidate
+    def apply_alns(self, temp, weights, repair_weights, destroy_weights):
+        return self.alns.run(weights,
+                             self.alns_decay,
+                             temp,
+                             repair_weights,
+                             destroy_weights)
 
     def simulate(self) -> list:
         best = self.initial_solution
         best_eval = utils.evaluate(self.origin_graph, best, self.origin_nodes)
         curr_state, curr_state_eval = best, best_eval
 
+        list_temps = list()
+        repair_weights = list()
+        destroy_weights = list()
+
+        weights = np.asarray(self.alns_weights, dtype=np.float16)
         curr_temp = self.t_function(0, self.temperature)
-        self.list_evals.append(best_eval)
 
         temp_iter = 0
         while curr_temp > 0.001:
-            for i in range(self.start, self.steps):
-                candidate = self.apply_alns()
-                candidate_eval = utils.evaluate(self.origin_graph, candidate, self.origin_nodes)
-                # print(curr_state, curr_state_eval, i)
+            for i in range(self.alns_n_iterations):
+                best, curr_state, repair_weights, destroy_weights = self.apply_alns(curr_temp,
+                                                                                    weights,
+                                                                                    repair_weights,
+                                                                                    destroy_weights)
 
-                if candidate_eval >= curr_state_eval:
-                    best, best_eval = candidate, candidate_eval
-                    curr_state, curr_state_eval = candidate, candidate_eval
-                else:
-                    metropolis = self.metropolis(curr_state_eval, candidate_eval, curr_temp)
-                    curr_state = self.choose_next_state_metropolis(metropolis,
-                                                                   curr_state,
-                                                                   candidate)
             curr_temp = self.t_function(temp_iter, self.temperature)
-            self.list_temps.append(curr_temp)
-            self.list_evals.append(best_eval)
+            list_temps.append(curr_temp)
             temp_iter += 1
 
         print(curr_state, curr_temp)
-        return [best, best_eval, self.list_temps, self.list_evals]
+        return [best, best_eval, list_temps]
