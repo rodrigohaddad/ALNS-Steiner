@@ -79,7 +79,7 @@ def random_repair(state: nx.Graph, total_graph: nx.Graph):
     return state
 
 def greedy_repair(state: nx.Graph, total_graph: nx.Graph):
-    # TODO: Ideia, ligar as componentes conexas utilizando o caminho mínimo entre elas
+    # TODO: Ideia, ligar as componentes conexas utilizando o caminho mínimo entre elas se houver melhoria
     pass
 
 

@@ -1,3 +1,4 @@
+from alns import utils
 from alns.operators.repair_operators import greedy_initial_solution
 from simmulated_annealing.simmulated_annealing import SimulatedAnnealing
 from alns.utils import parse_file
@@ -24,7 +25,7 @@ def t_function_3(t: float, t0: float, a=1000, b=2000) -> float:
 
 def main():
     # G = parse_file("data/test.edges")
-    G = pickle.load(open("data/toys/toy_generated-1.pickle", "rb"))
+    G = pickle.load(open("data/toys/toy_generated-12.pickle", "rb"))
 
     initial_solution = greedy_initial_solution(G)
 
@@ -40,7 +41,8 @@ def main():
                             origin_nodes=origin_nodes,
                             initial_solution=initial_solution,
                             **params)
-    sa.simulate()
+    result = sa.simulate()
+    utils.plot_graph(G, solution=result['best']['graph'])
 
 
 if __name__ == "__main__":

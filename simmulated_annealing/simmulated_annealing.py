@@ -37,9 +37,9 @@ class SimulatedAnnealing:
                              destroy_weights)
 
     def simulate(self) -> list:
-        best = self.initial_solution
-        best_eval = utils.evaluate(self.origin_graph, best, self.origin_nodes)
-        curr_state, curr_state_eval = best, best_eval
+        initial = self.initial_solution
+        initial_eval = utils.evaluate(self.origin_graph, initial, self.origin_nodes)
+        curr_state, curr_state_eval = initial, initial_eval
 
         list_temps = list()
         repair_weights = list()
@@ -61,4 +61,17 @@ class SimulatedAnnealing:
             temp_iter += 1
 
         print(curr_state, curr_temp)
-        return [best, best_eval, list_temps]
+        return {
+            "initial": {
+                "graph": initial,
+                "value": initial_eval
+            },
+            "best": {
+                "graph": best,
+                "value": utils.evaluate(self.origin_graph, best, self.origin_nodes)
+            },
+            "current": {
+                "graph": curr_state,
+                "value": utils.evaluate(self.origin_graph, curr_state, self.origin_nodes)
+            }
+        }
