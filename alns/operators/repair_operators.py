@@ -1,7 +1,8 @@
 import networkx as nx
 import random
-from alns.utils import evaluate
+from alns.solution_instance import SolutionInstance
 
+evaluate = SolutionInstance.evaluate
 
 def __is_already_visited(nc_sorted: dict,
                          initial_solution: nx.Graph) -> int:
@@ -59,8 +60,10 @@ def connect_pair(state: nx.Graph, total_graph: nx.Graph, source: int, target: in
     return state
 
 
-def random_repair(state: nx.Graph, total_graph: nx.Graph):
+def random_repair(current: SolutionInstance):
     # Warning: This function modifies the state graph
+    state = current.solution
+    total_graph = current.instance
     components = [
         state.subgraph(comp).copy() for comp in sorted(nx.connected_components(state), key=len, reverse=True) if len(comp) >= 2
     ]
@@ -78,9 +81,10 @@ def random_repair(state: nx.Graph, total_graph: nx.Graph):
 
     return state
 
-def greedy_repair(state: nx.Graph, total_graph: nx.Graph):
+def greedy_repair(current: SolutionInstance):
     # TODO: Ideia, ligar as componentes conexas utilizando o caminho mínimo entre elas se houver melhoria
-    pass
+    state = current.solution
+    total_graph = current.instance
 
 
 def regret_repair(state: nx.Graph, total_graph: nx.Graph):

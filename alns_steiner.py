@@ -2,6 +2,7 @@ from alns import utils
 from alns.operators.repair_operators import greedy_initial_solution
 from simmulated_annealing.simmulated_annealing import SimulatedAnnealing
 from alns.utils import parse_file
+from alns.solution_instance import SolutionInstance
 from math import log
 import pickle
 
@@ -37,12 +38,11 @@ def main():
 
     origin_nodes = [n[0] for n in G.nodes(data=True)]
 
-    sa = SimulatedAnnealing(origin_graph=G,
-                            origin_nodes=origin_nodes,
-                            initial_solution=initial_solution,
-                            **params)
+    initial_solution = SolutionInstance(G, initial_solution, instance_nodes=origin_nodes)
+
+    sa = SimulatedAnnealing(initial_solution=initial_solution, **params)
     result = sa.simulate()
-    utils.plot_graph(G, solution=result['best']['graph'])
+    utils.plot_graph(G, solution=result['best'].solution)
 
 
 if __name__ == "__main__":

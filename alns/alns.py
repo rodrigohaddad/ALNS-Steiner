@@ -5,28 +5,10 @@ from math import exp
 import alns.utils as utils
 from alns.operators.destroy_operators import random_removal
 from alns.operators.repair_operators import random_repair
+from alns.solution_instance import SolutionInstance
 
 
 class ALNS:
-    def __init__(self, origin_graph,
-                 initial_solution,
-                 origin_nodes,
-                 rnd_state=rnd.RandomState()):
-        self.destroy_operators = [random_removal]
-        self.repair_operators = [random_repair]
-        self.origin_graph = origin_graph
-        self.origin_nodes = origin_nodes
-        self.curr_state = self.best = self.initial_solution = initial_solution
-        self.best_eval = utils.evaluate(self.origin_graph, self.curr_state, self.origin_nodes)
-        self.rnd_state = rnd_state
-
-    def select_random_index(self,
-                            operators,
-                            weights,
-                            ):
-        return self.rnd_state.choice(np.arange(0, len(operators)),
-                                     p=weights / np.sum(weights))
-
     @staticmethod
     def choose_next_state_metropolis(metropolis: float,
                                      curr_state,
@@ -42,23 +24,35 @@ class ALNS:
         met = min(exp(diff / curr_temp), 1)
         return met
 
-    def decision_candidate(self, best, curr_state, candidate, temp):
-        candidate_eval = utils.evaluate(self.origin_graph, candidate, self.origin_nodes)
-        curr_state_eval = utils.evaluate(self.origin_graph, curr_state, self.origin_nodes)
+    def __init__(self, initial_solution: SolutionInstance, rnd_state=rnd.RandomState()):
+        self.destroy_operators = [random_removal]
+        self.repair_operators = [random_repair]
+        self.curr_state = self.best = self.initial_solution = initial_solution
+        self.rnd_state = rnd_state
 
-        met_value = self.metropolis(curr_state_eval, candidate_eval, temp)
+    def select_random_index(self,
+                            operators,
+                            weights,
+                            ):
+        return self.rnd_state.choice(np.arange(0, len(operators)),
+                                     p=weights / np.sum(weights))
 
-        if candidate_eval < self.best_eval:
-            self.best_eval = candidate_eval
-            return candidate, candidate, utils.BEST
+    def decision_candidate(self, candidate, temp):
+        candidate = SolutionInstance.new_solution_from_instance(self.best, candidate)
 
-        if candidate_eval < curr_state_eval:
+        met_value = self.metropolis(self.curr_state.value, candidate.value, temp)
+
+        self.curr_state_eval = candidate.value
+        if candidate < self.best:
+            self.curr_state = self.best = candidate
+            weight = utils.BEST
+        elif candidate < self.curr_state:
+            self.curr_state = candidate
             weight = utils.BETTER
         else:
-            curr_state, weight = self.choose_next_state_metropolis(met_value,
-                                                                   curr_state,
-                                                                   candidate)
-        return best, curr_state, weight
+            self.curr_state, weight = self.choose_next_state_metropolis(met_value, self.curr_state, candidate)
+        
+        return weight
 
     def run(self,
             weights,
@@ -80,12 +74,9 @@ class ALNS:
         d_op = self.destroy_operators[d_index]
 
         destroyed = d_op(self.curr_state, self.rnd_state)
-        repaired = r_op(destroyed, self.origin_graph)
+        repaired = r_op(destroyed)
 
-        self.best, self.curr_state, weight_index = self.decision_candidate(self.best,
-                                                                           self.curr_state,
-                                                                           repaired,
-                                                                           temp)
+        weight_index = self.decision_candidate(repaired, temp)
 
         destroy_weights[d_index] *= operator_decay
         destroy_weights[d_index] += (1 - operator_decay) * weights[weight_index]
@@ -93,4 +84,4 @@ class ALNS:
         repair_weights[r_index] *= operator_decay
         repair_weights[r_index] += (1 - operator_decay) * weights[weight_index]
 
-        return self.best, self.curr_state, repair_weights, destroy_weights
+        return repair_weights, destroy_weights
