@@ -2,8 +2,9 @@ import numpy as np
 import numpy.random as rnd
 from math import exp
 
-from alns import utils
+import alns.utils as utils
 from alns.operators.destroy_operators import random_removal
+from alns.operators.repair_operators import random_repair
 
 
 class ALNS:
@@ -12,7 +13,7 @@ class ALNS:
                  origin_nodes,
                  rnd_state=rnd.RandomState()):
         self.destroy_operators = [random_removal]
-        self.repair_operators = [random_removal]
+        self.repair_operators = [random_repair]
         self.origin_graph = origin_graph
         self.origin_nodes = origin_nodes
         self.curr_state = self.best = self.initial_solution = initial_solution
@@ -79,7 +80,7 @@ class ALNS:
         d_op = self.destroy_operators[d_index]
 
         destroyed = d_op(self.curr_state, self.rnd_state)
-        repaired = r_op(destroyed, self.rnd_state)
+        repaired = r_op(destroyed, self.origin_graph)
 
         self.best, self.curr_state, weight_index = self.decision_candidate(self.best,
                                                                            self.curr_state,

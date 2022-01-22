@@ -17,6 +17,11 @@ def random_removal(current: nx.Graph, random_state) -> nx.Graph:
     for e in n_edges_to_remove:
         destroyed.remove_edge(*to_be_destroyed[e])
 
+    # Remove isolated nodes (with 0 degree)
+    destroyed.remove_nodes_from(
+        [node for node, degree in destroyed.degree if degree == 0]
+    )
+
     return destroyed
 
 
