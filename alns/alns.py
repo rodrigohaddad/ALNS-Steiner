@@ -3,12 +3,18 @@ import numpy.random as rnd
 from math import exp
 
 import alns.utils as utils
-from alns.operators.destroy_operators import random_removal
-from alns.operators.repair_operators import random_repair
+from alns.operators import random_removal
+from alns.operators import random_repair
 from alns.solution_instance import SolutionInstance
 
 
 class ALNS:
+
+    def __init__(self, initial_solution: SolutionInstance, rnd_state=rnd.RandomState()):
+        self.destroy_operators = [random_removal]
+        self.repair_operators = [random_repair]
+        self.curr_state = self.best = self.initial_solution = initial_solution
+        self.rnd_state = rnd_state
     @staticmethod
     def choose_next_state_metropolis(metropolis: float,
                                      curr_state,
@@ -24,11 +30,6 @@ class ALNS:
         met = min(exp(diff / curr_temp), 1)
         return met
 
-    def __init__(self, initial_solution: SolutionInstance, rnd_state=rnd.RandomState()):
-        self.destroy_operators = [random_removal]
-        self.repair_operators = [random_repair]
-        self.curr_state = self.best = self.initial_solution = initial_solution
-        self.rnd_state = rnd_state
 
     def select_random_index(self,
                             operators,

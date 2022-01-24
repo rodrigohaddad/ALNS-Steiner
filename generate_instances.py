@@ -8,13 +8,13 @@ import matplotlib.pyplot as plt
 import alns.instance_generator.instance_generator as ig
 
 from alns.utils import plot_graph
-from alns.operators import repair_operators as ro
+import alns.operators as ro
 
 from typing import List, Tuple
 
 
 def generate_multiple_instances(parameters:
-        Tuple[int, int, int]) -> None:
+        Tuple[int, int, int], save=True) -> None:
     n = len(parameters)
     for i in range(1, n+1):
         num_nodes, num_terminals, num_edges = parameters[i-1]
@@ -28,7 +28,9 @@ def generate_multiple_instances(parameters:
     
         solution = ro.greedy_initial_solution(graph)
 
-        plot_graph(graph, output=f"data/toys/toy_generated-{i}.png", solution=solution)
+        plot_graph(graph, 
+            output=f"data/toys/toy_generated-{i}.png", 
+            solution=solution, save=save)
 
 
 def instances_to_excel() -> None:
@@ -100,7 +102,7 @@ def graph_to_excel(Gs: List[nx.Graph]) -> None:
         
         writer.save()
 
-    sheet_names = [f"BT{i+1}" for i in range(len(dfs))]
+    sheet_names = [f"ALNS{i+1}" for i in range(len(dfs))]
     write_excel(dfs, "instances_alns.xlsx", sheet_names)
 
     return dfs
@@ -122,8 +124,8 @@ if __name__ == "__main__":
         (25, 10, 45),
         (25, 11, 50),
     )
-    generate_multiple_instances(parameters)
-    instances_to_excel()
+    generate_multiple_instances(parameters, save=0)
+    #instances_to_excel()
 
 
 # %%

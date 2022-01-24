@@ -1,9 +1,18 @@
 from operator import setitem
 import networkx as nx
 
+
 class SolutionInstance:
     """Object to represent an instance of the Steiner Problem with its solution and value."""
     
+    def __init__(self, instance: nx.Graph, solution: nx.Graph, value=None, instance_nodes=None) -> None:
+        self.__instance = instance
+        self.__instance_nodes = instance_nodes
+        self.__solution = solution
+        self.__value = value
+        if self.__instance_nodes is None:
+            self.__instance_nodes = [n[0] for n in instance.nodes(data=True)]
+
     @staticmethod
     def evaluate(origin_graph: nx.Graph, solution: nx.Graph, origin_nodes=None) -> int:
         if not origin_nodes:
@@ -21,14 +30,6 @@ class SolutionInstance:
     @classmethod
     def new_solution_from_instance(cls, prev, solution):
         return cls(prev.instance, solution, None, prev.instance_nodes)
-
-    def __init__(self, instance: nx.Graph, solution: nx.Graph, value=None, instance_nodes=None) -> None:
-        self.__instance = instance
-        self.__instance_nodes = instance_nodes
-        self.__solution = solution
-        self.__value = value
-        if self.__instance_nodes is None:
-            self.__instance_nodes = [n[0] for n in instance.nodes(data=True)]
 
     @property
     def instance(self):

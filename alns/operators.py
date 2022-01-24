@@ -1,8 +1,46 @@
-import networkx as nx
+# %%
+import copy
 import random
+import networkx as nx
+
+from typing import Any, Dict, List, Tuple
+
 from alns.solution_instance import SolutionInstance
 
+Node = Tuple[int, Dict[Any, Any]]
+Edge = Tuple[int, int, int]
+
+degree_of_destruction = 0.25
 evaluate = SolutionInstance.evaluate
+
+
+### preprocess ###
+
+def preprocess(G: nx.Graph) -> Tuple[Tuple[Node], 
+        Tuple[Edge], nx.Graph]:
+    """
+    Remove graph leaves and returns the resulting graph
+    as well as the nodes taken out
+    """
+    nG = copy.deepcopy(G)
+    
+    def _preprocess(nG: nx.Graph) -> Tuple[Node, Edge]:
+        try:
+            nodes, edges = zip(*[(node, edge) 
+                for node, edge in zip(nG.nodes(data=True), 
+                                      G.edges(data=True))
+                    if nG.degree(node[0])==1])
+        except ValueError:
+            return ((), ())
+    
+        nG.remove_nodes_from([n[0] for n in nodes])
+        nnodes, nedges = _preprocess(nG)
+        return (nodes + nnodes, edges + nedges)
+
+    return _preprocess(nG) + (nG,)
+
+
+### Repair operators ###
 
 def __is_already_visited(nc_sorted: dict,
                          initial_solution: nx.Graph) -> int:
@@ -46,6 +84,7 @@ def greedy_initial_solution(path: nx.Graph,
 
     return best_initial_solution
 
+
 def connect_pair(state: nx.Graph, total_graph: nx.Graph, source: int, target: int):
     # Warning: This function modifies the state graph
     path = nx.dijkstra_path(total_graph, source, target, 'cost')
@@ -81,6 +120,7 @@ def random_repair(current: SolutionInstance):
 
     return state
 
+
 def greedy_repair(current: SolutionInstance):
     # TODO: Ideia, ligar as componentes conexas utilizando o caminho mínimo entre elas se houver melhoria
     state = current.solution
@@ -89,3 +129,44 @@ def greedy_repair(current: SolutionInstance):
 
 def regret_repair(state: nx.Graph, total_graph: nx.Graph):
     pass
+
+
+### Destroy operators ###
+
+def edges_to_remove(state: nx.Graph) -> int:
+    return int(len(state.edges) * degree_of_destruction)
+
+
+def random_removal(current: SolutionInstance, random_state) -> nx.Graph:
+    destroyed = current.solution.copy()
+    to_be_destroyed = list(destroyed.edges)
+    n_edges_to_remove = random_state.choice(len(to_be_destroyed),
+                                            edges_to_remove(current.solution),
+                                            replace=False)
+
+    for e in n_edges_to_remove:
+        destroyed.remove_edge(*to_be_destroyed[e])
+
+    # Remove isolated nodes (with 0 degree)
+    destroyed.remove_nodes_from(
+        [node for node, degree in destroyed.degree if degree == 0]
+    )
+
+    return SolutionInstance.new_solution_from_instance(current, destroyed)
+
+
+def worst_removal(current: SolutionInstance) -> nx.Graph:
+    destroyed = current.solution.copy()
+
+    worst_edges = sorted([])
+
+    for idx in range(edges_to_remove(current.solution)):
+        del destroyed.edges[worst_edges[-idx - 1]]
+
+    return SolutionInstance.new_solution_from_instance(current, destroyed)
+
+
+def shawn_removal(current: nx.Graph) -> nx.Graph:
+    return current
+
+# %%
