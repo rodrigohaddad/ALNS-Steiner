@@ -1,7 +1,8 @@
 import networkx as nx
 import random
-from alns.utils import evaluate
+from alns.solution_instance import SolutionInstance
 
+evaluate = SolutionInstance.evaluate
 
 def __is_already_visited(nc_sorted: dict,
                          initial_solution: nx.Graph) -> int:
@@ -45,10 +46,46 @@ def greedy_initial_solution(path: nx.Graph,
 
     return best_initial_solution
 
+def connect_pair(state: nx.Graph, total_graph: nx.Graph, source: int, target: int):
+    # Warning: This function modifies the state graph
+    path = nx.dijkstra_path(total_graph, source, target, 'cost')
+    for i, node in enumerate(path[1:], 1):
+        prev_node = path[i-1]
+        if not state.has_node(node):
+            aux = {n:data for n, data in total_graph.nodes(data=True)}
+            state.add_node(node, **aux[node]) # TODO: Verify if is adding the attributes
+        if state.has_edge(prev_node, node):
+            continue
+        state.add_edge(prev_node, node, **total_graph[prev_node][node])
+    return state
 
-def greedy_repair():
-    pass
+
+def random_repair(current: SolutionInstance):
+    # Warning: This function modifies the state graph
+    state = current.solution
+    total_graph = current.instance
+    components = [
+        state.subgraph(comp).copy() for comp in sorted(nx.connected_components(state), key=len, reverse=True) if len(comp) >= 2
+    ]
+
+    source_graph = components[0]
+    for comp in components:
+        source = random.choice(list(source_graph.nodes))
+        target = random.choice(list(comp.nodes()))
+
+        state = connect_pair(state, total_graph, source, target)
+
+        source_graph = state.subgraph(
+            max(nx.connected_components(state), key=len)
+        )
+
+    return state
+
+def greedy_repair(current: SolutionInstance):
+    # TODO: Ideia, ligar as componentes conexas utilizando o caminho mínimo entre elas se houver melhoria
+    state = current.solution
+    total_graph = current.instance
 
 
-def regret_repair():
+def regret_repair(state: nx.Graph, total_graph: nx.Graph):
     pass
