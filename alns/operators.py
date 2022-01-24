@@ -16,7 +16,7 @@ evaluate = SolutionInstance.evaluate
 
 ### preprocess ###
 
-def preprocess(G: nx.Graph) -> Tuple[Tuple[Node], 
+def remove_leaves(G: nx.Graph) -> Tuple[Tuple[Node], 
         Tuple[Edge], nx.Graph]:
     """
     Remove graph leaves and returns the resulting graph
