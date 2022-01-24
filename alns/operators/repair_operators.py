@@ -4,6 +4,7 @@ from alns.solution_instance import SolutionInstance
 
 evaluate = SolutionInstance.evaluate
 
+
 def __is_already_visited(nc_sorted: dict,
                          initial_solution: nx.Graph) -> int:
     for nc, _ in nc_sorted.items():
@@ -46,14 +47,15 @@ def greedy_initial_solution(path: nx.Graph,
 
     return best_initial_solution
 
+
 def connect_pair(state: nx.Graph, total_graph: nx.Graph, source: int, target: int):
     # Warning: This function modifies the state graph
     path = nx.dijkstra_path(total_graph, source, target, 'cost')
     for i, node in enumerate(path[1:], 1):
-        prev_node = path[i-1]
+        prev_node = path[i - 1]
         if not state.has_node(node):
-            aux = {n:data for n, data in total_graph.nodes(data=True)}
-            state.add_node(node, **aux[node]) # TODO: Verify if is adding the attributes
+            aux = {n: data for n, data in total_graph.nodes(data=True)}
+            state.add_node(node, **aux[node])  # TODO: Verify if is adding the attributes
         if state.has_edge(prev_node, node):
             continue
         state.add_edge(prev_node, node, **total_graph[prev_node][node])
@@ -65,7 +67,8 @@ def random_repair(current: SolutionInstance):
     state = current.solution
     total_graph = current.instance
     components = [
-        state.subgraph(comp).copy() for comp in sorted(nx.connected_components(state), key=len, reverse=True) if len(comp) >= 2
+        state.subgraph(comp).copy() for comp in sorted(nx.connected_components(state), key=len, reverse=True) if
+        len(comp) >= 2
     ]
 
     source_graph = components[0]
@@ -80,6 +83,7 @@ def random_repair(current: SolutionInstance):
         )
 
     return state
+
 
 def greedy_repair(current: SolutionInstance):
     # TODO: Ideia, ligar as componentes conexas utilizando o caminho mínimo entre elas se houver melhoria

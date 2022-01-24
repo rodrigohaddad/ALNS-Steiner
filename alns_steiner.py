@@ -1,7 +1,6 @@
 from alns import utils
 from alns.operators.repair_operators import greedy_initial_solution
 from simmulated_annealing.simmulated_annealing import SimulatedAnnealing
-from alns.utils import parse_file
 from alns.solution_instance import SolutionInstance
 from math import log
 import pickle
@@ -26,15 +25,15 @@ def t_function_3(t: float, t0: float, a=1000, b=2000) -> float:
 
 def main():
     # G = parse_file("data/test.edges")
-    G = pickle.load(open("data/toys/toy_generated-12.pickle", "rb"))
+    G = pickle.load(open("data/toys/toy_generated-1.pickle", "rb"))
 
     initial_solution = greedy_initial_solution(G)
 
-    params = {'temperature': 25000,
+    params = {'temperature': 250,
               't_function': t_function_2,
               'alns_weights': [4, 2.4, 3, 1.5],
               'alns_decay': 0.8,
-              'alns_n_iterations': 5000}
+              'alns_n_iterations': 50}
 
     origin_nodes = [n[0] for n in G.nodes(data=True)]
 

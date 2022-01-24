@@ -1,10 +1,9 @@
 import numpy as np
-import networkx as nx
 from typing import Callable
 
-from alns import utils
 from alns.alns import ALNS
 from alns.solution_instance import SolutionInstance
+from alns.statistics import Statistics
 
 
 class SimulatedAnnealing:
@@ -20,11 +19,13 @@ class SimulatedAnnealing:
         self.t_function = t_function
         self.initial_solution = initial_solution
 
+        self.statistics = Statistics()
+
         self.alns_weights = alns_weights
         self.alns_decay = alns_decay
         self.alns_n_iterations = alns_n_iterations
 
-        self.alns = ALNS(self.initial_solution)
+        self.alns = ALNS(self.initial_solution, self.statistics)
 
     def apply_alns(self, temp, weights, repair_weights, destroy_weights):
         return self.alns.run(weights,
@@ -33,7 +34,7 @@ class SimulatedAnnealing:
                              repair_weights,
                              destroy_weights)
 
-    def simulate(self) -> list:
+    def simulate(self) -> dict:
         list_temps = list()
         repair_weights = list()
         destroy_weights = list()
@@ -44,7 +45,10 @@ class SimulatedAnnealing:
         temp_iter = 0
         while curr_temp > 0.001:
             for i in range(self.alns_n_iterations):
-                repair_weights, destroy_weights = self.apply_alns(curr_temp, weights, repair_weights, destroy_weights)
+                repair_weights, destroy_weights = self.apply_alns(curr_temp,
+                                                                  weights,
+                                                                  repair_weights,
+                                                                  destroy_weights)
 
             curr_temp = self.t_function(temp_iter, self.temperature)
             list_temps.append(curr_temp)
@@ -53,5 +57,6 @@ class SimulatedAnnealing:
         return {
             "initial": self.alns.initial_solution,
             "best": self.alns.best,
-            "current": self.alns.curr_state
+            "current": self.alns.curr_state,
+            "statistics": self.statistics
         }
