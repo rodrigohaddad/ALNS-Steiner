@@ -64,6 +64,7 @@ def greedy_initial_solution(path: nx.Graph,
             candidate_solution = nx.Graph()
             curr_node = random.choice(terminals_n)
             candidate_solution.add_node(curr_node)
+
             while True:
                 next_cost = {n: (n - e['cost'], path.nodes[n]['terminal']) for n, e in path[curr_node].items()}
                 nc_sorted = dict(sorted(next_cost.items(), key=lambda x: x[1], reverse=True))
@@ -77,6 +78,7 @@ def greedy_initial_solution(path: nx.Graph,
 
             if all(n in list(candidate_solution.nodes) for n in terminals_n):
                 break
+
         candidate_eval = evaluate(path, candidate_solution)
         if not best_evaluation or candidate_eval < best_evaluation:
             best_evaluation = candidate_eval
@@ -85,26 +87,35 @@ def greedy_initial_solution(path: nx.Graph,
     return best_initial_solution
 
 
-def connect_pair(state: nx.Graph, total_graph: nx.Graph, source: int, target: int):
-    # Warning: This function modifies the state graph
+def connect_pair(state: nx.Graph, total_graph: nx.Graph, 
+        source: int, target: int) -> None:
+    """This function modifies the state graph"""
+
     path = nx.dijkstra_path(total_graph, source, target, 'cost')
     for i, node in enumerate(path[1:], 1):
         prev_node = path[i-1]
+        
         if not state.has_node(node):
             aux = {n:data for n, data in total_graph.nodes(data=True)}
             state.add_node(node, **aux[node]) # TODO: Verify if is adding the attributes
+        
         if state.has_edge(prev_node, node):
             continue
+        
         state.add_edge(prev_node, node, **total_graph[prev_node][node])
-    return state
 
 
-def random_repair(current: SolutionInstance):
-    # Warning: This function modifies the state graph
+def random_repair(current: SolutionInstance) -> nx.Graph:
+    """This function modifies the state graph"""
+
     state = current.solution
     total_graph = current.instance
     components = [
-        state.subgraph(comp).copy() for comp in sorted(nx.connected_components(state), key=len, reverse=True) if len(comp) >= 2
+        state.subgraph(comp).copy() 
+            for comp in sorted(
+                nx.connected_components(state), 
+                key=len, reverse=True) 
+            if len(comp) >= 2
     ]
 
     source_graph = components[0]
@@ -112,7 +123,7 @@ def random_repair(current: SolutionInstance):
         source = random.choice(list(source_graph.nodes))
         target = random.choice(list(comp.nodes()))
 
-        state = connect_pair(state, total_graph, source, target)
+        connect_pair(state, total_graph, source, target)
 
         source_graph = state.subgraph(
             max(nx.connected_components(state), key=len)
@@ -163,7 +174,8 @@ def worst_removal(current: SolutionInstance) -> nx.Graph:
     for idx in range(edges_to_remove(current.solution)):
         del destroyed.edges[worst_edges[-idx - 1]]
 
-    return SolutionInstance.new_solution_from_instance(current, destroyed)
+    return SolutionInstance.new_solution_from_instance(
+        current, destroyed)
 
 
 def shawn_removal(current: nx.Graph) -> nx.Graph:

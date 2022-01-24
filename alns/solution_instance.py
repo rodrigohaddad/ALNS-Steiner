@@ -1,6 +1,7 @@
 from operator import setitem
 import networkx as nx
 
+from __future__ import annotations
 
 class SolutionInstance:
     """Object to represent an instance of the Steiner Problem with its solution and value."""
@@ -13,8 +14,10 @@ class SolutionInstance:
         if self.__instance_nodes is None:
             self.__instance_nodes = [n[0] for n in instance.nodes(data=True)]
 
+
     @staticmethod
-    def evaluate(origin_graph: nx.Graph, solution: nx.Graph, origin_nodes=None) -> int:
+    def evaluate(origin_graph: nx.Graph, 
+            solution: nx.Graph, origin_nodes=None) -> int:
         if not origin_nodes:
             origin_nodes = [n[0] for n in origin_graph.nodes(data=True)]
         solution_n = [n[0] for n in solution.nodes(data=True)]
@@ -28,7 +31,8 @@ class SolutionInstance:
         return cost_edges + cost_unvisited_nodes
 
     @classmethod
-    def new_solution_from_instance(cls, prev, solution):
+    def new_solution_from_instance(cls, prev, solution) -> \
+            SolutionInstance:
         return cls(prev.instance, solution, None, prev.instance_nodes)
 
     @property
@@ -40,24 +44,24 @@ class SolutionInstance:
         return self.__instance_nodes
 
     @property
-    def value(self):
+    def value(self) -> int:
         if self.__value is None:
             self.__value = self.evaluate(self.__instance, self.__solution, self.__instance_nodes)
         return self.__value
 
     @property
-    def solution(self):
+    def solution(self) -> nx.Graph:
         return self.__solution  
 
-    def __lt__(self, other):
+    def __lt__(self, other: SolutionInstance) -> bool:
         return self.value < other.value
 
-    def __le__(self, other):
+    def __le__(self, other: SolutionInstance) -> bool:
         return self.value <= other.value
 
-    def __gt__(self, other):
+    def __gt__(self, other: SolutionInstance) -> bool:
         return self.value > other.value
 
-    def __ge__(self, other):
+    def __ge__(self, other: SolutionInstance) -> bool:
         return self.value >= other.value
     

@@ -5,7 +5,7 @@ import pickle
 import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
-import alns.instance_generator.instance_generator as ig
+import instance_generator as ig
 
 from alns.utils import plot_graph
 import alns.operators as ro
@@ -125,7 +125,7 @@ if __name__ == "__main__":
         (25, 11, 50),
     )
     generate_multiple_instances(parameters, save=0)
-    #instances_to_excel()
+    instances_to_excel()
 
 
 # %%

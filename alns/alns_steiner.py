@@ -1,9 +1,10 @@
 from alns import utils
 from alns.operators import greedy_initial_solution
-from simmulated_annealing.simmulated_annealing import SimulatedAnnealing
+from simmulated_annealing import SimulatedAnnealing
 from alns.solution_instance import SolutionInstance
 from math import log
 import pickle
+
 
 ''' ALNS for Steiner prize collecting problem
 An application of adaptive large neighborhood search

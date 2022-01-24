@@ -15,6 +15,8 @@ class ALNS:
         self.repair_operators = [random_repair]
         self.curr_state = self.best = self.initial_solution = initial_solution
         self.rnd_state = rnd_state
+
+
     @staticmethod
     def choose_next_state_metropolis(metropolis: float,
                                      curr_state,
@@ -22,6 +24,7 @@ class ALNS:
         if np.random.uniform() <= metropolis:
             return candidate_state, utils.ACCEPTED
         return curr_state, utils.REJECTED
+
 
     @staticmethod
     def metropolis(curr_state_eval: float, candidate_eval: float,
@@ -37,6 +40,7 @@ class ALNS:
                             ):
         return self.rnd_state.choice(np.arange(0, len(operators)),
                                      p=weights / np.sum(weights))
+
 
     def decision_candidate(self, candidate, temp):
         candidate = SolutionInstance.new_solution_from_instance(self.best, candidate)
@@ -54,6 +58,7 @@ class ALNS:
             self.curr_state, weight = self.choose_next_state_metropolis(met_value, self.curr_state, candidate)
         
         return weight
+
 
     def run(self,
             weights,

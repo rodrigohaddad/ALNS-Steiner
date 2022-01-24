@@ -1,8 +1,7 @@
 import numpy as np
 import networkx as nx
-from typing import Callable
+from typing import Callable, Dict
 
-from alns import utils
 from alns.alns import ALNS
 from alns.solution_instance import SolutionInstance
 
@@ -33,7 +32,7 @@ class SimulatedAnnealing:
                              repair_weights,
                              destroy_weights)
 
-    def simulate(self) -> list:
+    def simulate(self) -> Dict[str, nx.Graph]:
         list_temps = list()
         repair_weights = list()
         destroy_weights = list()
