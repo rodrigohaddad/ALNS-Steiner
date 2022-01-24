@@ -111,11 +111,8 @@ def random_repair(current: SolutionInstance) -> nx.Graph:
     state = current.solution
     total_graph = current.instance
     components = [
-        state.subgraph(comp).copy() 
-            for comp in sorted(
-                nx.connected_components(state), 
-                key=len, reverse=True) 
-            if len(comp) >= 2
+        state.subgraph(comp).copy() for comp in sorted(nx.connected_components(state), key=len, reverse=True) if
+        len(comp) >= 2
     ]
 
     source_graph = components[0]
@@ -144,11 +141,14 @@ def regret_repair(state: nx.Graph, total_graph: nx.Graph):
 
 ### Destroy operators ###
 
+degree_of_destruction = 0.25
+
+
 def edges_to_remove(state: nx.Graph) -> int:
     return int(len(state.edges) * degree_of_destruction)
 
 
-def random_removal(current: SolutionInstance, random_state) -> nx.Graph:
+def random_removal(current: SolutionInstance, random_state) -> SolutionInstance:
     destroyed = current.solution.copy()
     to_be_destroyed = list(destroyed.edges)
     n_edges_to_remove = random_state.choice(len(to_be_destroyed),
@@ -160,25 +160,34 @@ def random_removal(current: SolutionInstance, random_state) -> nx.Graph:
 
     # Remove isolated nodes (with 0 degree)
     destroyed.remove_nodes_from(
-        [node for node, degree in destroyed.degree if degree == 0]
+        [node for node, degree in destroyed.degree 
+            if degree == 0]
     )
 
     return SolutionInstance.new_solution_from_instance(current, destroyed)
 
 
-def worst_removal(current: SolutionInstance) -> nx.Graph:
+def worst_removal(current: SolutionInstance, _) -> SolutionInstance:
+    """ Removes the most expensive edges """
     destroyed = current.solution.copy()
+    destroy_candidates = sorted(list(destroyed.edges(data=True)),
+                                key=lambda tup: tup[2]['cost'],
+                                reverse=True)
 
-    worst_edges = sorted([])
+    for e in range(edges_to_remove(current.solution)):
+        destroyed.remove_edge(*destroy_candidates[e][:2])
 
-    for idx in range(edges_to_remove(current.solution)):
-        del destroyed.edges[worst_edges[-idx - 1]]
+    # Remove isolated nodes (with 0 degree)
+    destroyed.remove_nodes_from(
+        [node for node, degree in 
+            destroyed.degree if degree == 0]
+    )
 
     return SolutionInstance.new_solution_from_instance(
         current, destroyed)
 
 
-def shawn_removal(current: nx.Graph) -> nx.Graph:
+def shaw_removal(current: nx.Graph) -> nx.Graph:
     return current
 
 # %%

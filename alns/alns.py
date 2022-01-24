@@ -3,18 +3,21 @@ import numpy.random as rnd
 from math import exp
 
 import alns.utils as utils
-from alns.operators import random_removal
-from alns.operators import random_repair
+from alns.operators import (random_removal, 
+    worst_removal, random_repair)
 from alns.solution_instance import SolutionInstance
 
 
 class ALNS:
 
-    def __init__(self, initial_solution: SolutionInstance, rnd_state=rnd.RandomState()):
-        self.destroy_operators = [random_removal]
+    def __init__(self, initial_solution: SolutionInstance,
+                 statistics,
+                 rnd_state=rnd.RandomState()):
+        self.destroy_operators = [random_removal, worst_removal]
         self.repair_operators = [random_repair]
-        self.curr_state = self.best = self.initial_solution = initial_solution
+        self.curr_state = self.best = self.initial_solution = self.original_solution = initial_solution
         self.rnd_state = rnd_state
+        self.statistics = statistics
 
 
     @staticmethod
@@ -33,7 +36,6 @@ class ALNS:
         met = min(exp(diff / curr_temp), 1)
         return met
 
-
     def select_random_index(self,
                             operators,
                             weights,
@@ -43,15 +45,14 @@ class ALNS:
 
 
     def decision_candidate(self, candidate, temp):
-        candidate = SolutionInstance.new_solution_from_instance(self.best, candidate)
+        candidate = SolutionInstance.new_solution_from_instance(self.original_solution, candidate)
 
         met_value = self.metropolis(self.curr_state.value, candidate.value, temp)
 
-        self.curr_state_eval = candidate.value
-        if candidate < self.best:
+        if candidate.value < self.best.value:
             self.curr_state = self.best = candidate
             weight = utils.BEST
-        elif candidate < self.curr_state:
+        elif candidate.value < self.curr_state.value:
             self.curr_state = candidate
             weight = utils.BETTER
         else:
@@ -89,5 +90,11 @@ class ALNS:
 
         repair_weights[r_index] *= operator_decay
         repair_weights[r_index] += (1 - operator_decay) * weights[weight_index]
+
+        self.statistics.add_evaluation_candidate_info(self.curr_state.value)
+        self.statistics.add_evaluation_best_info(self.best.value)
+
+        self.statistics.add_destroy_operator_info(d_op.__name__, weight_index)
+        self.statistics.add_repair_operator_info(r_op.__name__, weight_index)
 
         return repair_weights, destroy_weights
