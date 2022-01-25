@@ -2,6 +2,7 @@
 import copy
 import random
 import networkx as nx
+from itertools import product
 
 from typing import Any, Dict, List, Tuple
 
@@ -87,52 +88,91 @@ def greedy_initial_solution(path: nx.Graph,
     return best_initial_solution
 
 
-def connect_pair(state: nx.Graph, total_graph: nx.Graph, 
-        source: int, target: int) -> None:
+def connect_pair(current: SolutionInstance, source: int, target: int) -> None:
     """This function modifies the state graph"""
 
-    path = nx.dijkstra_path(total_graph, source, target, 'cost')
+    state = current.solution
+    path = nx.dijkstra_path(current.instance, source, target, 'cost')
     for i, node in enumerate(path[1:], 1):
         prev_node = path[i-1]
         
         if not state.has_node(node):
-            aux = {n:data for n, data in total_graph.nodes(data=True)}
-            state.add_node(node, **aux[node]) # TODO: Verify if is adding the attributes
+            aux = {n:data for n, data in current.instance.nodes(data=True)}
+            state.add_node(node, **aux[node])
         
         if state.has_edge(prev_node, node):
             continue
         
-        state.add_edge(prev_node, node, **total_graph[prev_node][node])
+        state.add_edge(prev_node, node, **current.instance[prev_node][node])
 
 
-def random_repair(current: SolutionInstance) -> nx.Graph:
-    """This function modifies the state graph"""
+def random_repair(current: SolutionInstance, *args) -> nx.Graph:
+    """This function modifies the current solution"""
 
     state = current.solution
-    total_graph = current.instance
     components = [
         state.subgraph(comp).copy() for comp in sorted(nx.connected_components(state), key=len, reverse=True) if
         len(comp) >= 2
     ]
 
+    if len(components) <= 1:
+        return current
+
     source_graph = components[0]
-    for comp in components:
+    for comp in components[1:]:
         source = random.choice(list(source_graph.nodes))
         target = random.choice(list(comp.nodes()))
 
-        connect_pair(state, total_graph, source, target)
+        connect_pair(current, source, target)
 
         source_graph = state.subgraph(
             max(nx.connected_components(state), key=len)
         )
 
-    return state
+    return current
 
 
-def greedy_repair(current: SolutionInstance):
-    # TODO: Ideia, ligar as componentes conexas utilizando o caminho mínimo entre elas se houver melhoria
+def greedy_repair(current: SolutionInstance, previous: SolutionInstance):
+
     state = current.solution
-    total_graph = current.instance
+
+    components = [
+        state.subgraph(comp).copy() for comp in sorted(nx.connected_components(state), key=len, reverse=True) if
+        len(comp) >= 2
+    ]
+
+    if len(components) <= 1:
+        return current
+    
+    nodes_in_components = [[n for n in comp] for comp in components]
+    for comp in nodes_in_components:
+        random.shuffle(comp)
+    path_list = product(*nodes_in_components)
+
+    for path in path_list:
+        temp = current.copy()
+        for i in range(1, len(path)):
+            connect_pair(temp, path[i-1], path[i])
+        if temp < previous:
+            return temp
+    return temp # if no improvement in all possible pairs, act like random_repair
+
+
+def terminals_repair(current: SolutionInstance, previous: SolutionInstance, max_trials=5):
+    # First connect the graph
+    current = greedy_repair(current, previous)
+
+    terminals_n = [n for n, data in current.instance.nodes(data=True) if data['terminal']]
+
+    for terminal in terminals_n:
+        if terminal not in current.solution:
+            temp = current.copy()
+            for _ in range(max_trials):
+                connect_pair(temp, terminal, random.choice(list(temp.solution.nodes)))
+                if temp < current:
+                    current = temp
+                    break
+    return current
 
 
 def regret_repair(state: nx.Graph, total_graph: nx.Graph):
