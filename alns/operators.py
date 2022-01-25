@@ -7,8 +7,6 @@ from typing import Any, Dict, List, Tuple
 
 from alns.solution_instance import SolutionInstance
 
-Node = Tuple[int, Dict[Any, Any]]
-Edge = Tuple[int, int, int]
 
 degree_of_destruction = 0.25
 evaluate = SolutionInstance.evaluate
@@ -16,28 +14,27 @@ evaluate = SolutionInstance.evaluate
 
 ### preprocess ###
 
-def remove_leaves(G: nx.Graph) -> Tuple[Tuple[Node], 
-        Tuple[Edge], nx.Graph]:
+def remove_leaves(G: nx.Graph) -> nx.Graph:
     """
     Remove graph leaves and returns the resulting graph
     as well as the nodes taken out
     """
     nG = copy.deepcopy(G)
     
-    def _preprocess(nG: nx.Graph) -> Tuple[Node, Edge]:
+    def _preprocess(nG: nx.Graph) -> None:
         try:
             nodes, edges = zip(*[(node, edge) 
                 for node, edge in zip(nG.nodes(data=True), 
                                       G.edges(data=True))
-                    if nG.degree(node[0])==1])
+                    if nG.degree(node[0])==1 and not node[1]["prize"]])
         except ValueError:
-            return ((), ())
+            return
     
         nG.remove_nodes_from([n[0] for n in nodes])
-        nnodes, nedges = _preprocess(nG)
-        return (nodes + nnodes, edges + nedges)
+        _preprocess(nG)
 
-    return _preprocess(nG) + (nG,)
+    _preprocess(nG)
+    return nG
 
 
 ### Repair operators ###

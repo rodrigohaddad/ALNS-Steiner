@@ -1,7 +1,8 @@
+from __future__ import annotations
+
+
 from operator import setitem
 import networkx as nx
-
-from __future__ import annotations
 
 class SolutionInstance:
     """Object to represent an instance of the Steiner Problem with its solution and value."""
