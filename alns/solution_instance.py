@@ -1,8 +1,6 @@
 from operator import setitem
 import networkx as nx
 
-from __future__ import annotations
-
 class SolutionInstance:
     """Object to represent an instance of the Steiner Problem with its solution and value."""
     
@@ -12,15 +10,14 @@ class SolutionInstance:
         self.__solution = solution
         self.__value = value
         if self.__instance_nodes is None:
-            self.__instance_nodes = [n[0] for n in instance.nodes(data=True)]
-
+            self.__instance_nodes = [n for n in instance.nodes]    
 
     @staticmethod
     def evaluate(origin_graph: nx.Graph, 
             solution: nx.Graph, origin_nodes=None) -> int:
         if not origin_nodes:
-            origin_nodes = [n[0] for n in origin_graph.nodes(data=True)]
-        solution_n = [n[0] for n in solution.nodes(data=True)]
+            origin_nodes = [n for n in origin_graph.nodes]
+        solution_n = [n for n in solution.nodes]
         unvisited_nodes = list(set(origin_nodes).difference(solution_n))
 
         cost_edges = sum([e[2]["cost"]
@@ -31,9 +28,11 @@ class SolutionInstance:
         return cost_edges + cost_unvisited_nodes
 
     @classmethod
-    def new_solution_from_instance(cls, prev, solution) -> \
-            SolutionInstance:
+    def new_solution_from_instance(cls, prev, solution):
         return cls(prev.instance, solution, None, prev.instance_nodes)
+
+    def copy(self):
+        return SolutionInstance(self.instance, self.solution.copy(), self.__value, self.instance_nodes)
 
     @property
     def instance(self):
@@ -53,15 +52,15 @@ class SolutionInstance:
     def solution(self) -> nx.Graph:
         return self.__solution  
 
-    def __lt__(self, other: SolutionInstance) -> bool:
+    def __lt__(self, other) -> bool:
         return self.value < other.value
 
-    def __le__(self, other: SolutionInstance) -> bool:
+    def __le__(self, other) -> bool:
         return self.value <= other.value
 
-    def __gt__(self, other: SolutionInstance) -> bool:
+    def __gt__(self, other) -> bool:
         return self.value > other.value
 
-    def __ge__(self, other: SolutionInstance) -> bool:
+    def __ge__(self, other) -> bool:
         return self.value >= other.value
     
