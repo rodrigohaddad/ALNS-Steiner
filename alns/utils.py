@@ -26,11 +26,11 @@ def plot_graph(G: nx.Graph,
               for g in G.edges(data=True)}
 
     node_labels = {
-        node: data['prize'] for node, data in G.nodes(data=True)
+        node: data['prize'] if data['prize'] != 0 else '' for node, data in G.nodes(data=True)
     }
 
-    pos = nx.spring_layout(G)
-    nx.draw_networkx(G, pos=pos, labels=node_labels)
+    pos = nx.spring_layout(G, weight='cost', k=1/len(G), iterations=200)
+    nx.draw_networkx(G, pos=pos, labels=node_labels, node_size=100)
     nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=labels)
     
     if solution is not None:
