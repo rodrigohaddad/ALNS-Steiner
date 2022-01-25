@@ -3,26 +3,12 @@ import numpy.random as rnd
 from math import exp
 
 import alns.utils as utils
-from alns.operators.destroy_operators import random_removal, worst_removal
-from alns.operators.repair_operators import random_repair
+from alns.operators import (random_removal, 
+    worst_removal, random_repair)
 from alns.solution_instance import SolutionInstance
 
 
 class ALNS:
-    @staticmethod
-    def choose_next_state_metropolis(metropolis: float,
-                                     curr_state,
-                                     candidate_state):
-        if np.random.uniform() <= metropolis:
-            return candidate_state, utils.ACCEPTED
-        return curr_state, utils.REJECTED
-
-    @staticmethod
-    def metropolis(curr_state_eval: float, candidate_eval: float,
-                   curr_temp: float) -> float:
-        diff = candidate_eval - curr_state_eval
-        met = min(exp(diff / curr_temp), 1)
-        return met
 
     def __init__(self, initial_solution: SolutionInstance,
                  statistics,
@@ -33,12 +19,30 @@ class ALNS:
         self.rnd_state = rnd_state
         self.statistics = statistics
 
+
+    @staticmethod
+    def choose_next_state_metropolis(metropolis: float,
+                                     curr_state,
+                                     candidate_state):
+        if np.random.uniform() <= metropolis:
+            return candidate_state, utils.ACCEPTED
+        return curr_state, utils.REJECTED
+
+
+    @staticmethod
+    def metropolis(curr_state_eval: float, candidate_eval: float,
+                   curr_temp: float) -> float:
+        diff = candidate_eval - curr_state_eval
+        met = min(exp(diff / curr_temp), 1)
+        return met
+
     def select_random_index(self,
                             operators,
                             weights,
                             ):
         return self.rnd_state.choice(np.arange(0, len(operators)),
                                      p=weights / np.sum(weights))
+
 
     def decision_candidate(self, candidate, temp):
         candidate = SolutionInstance.new_solution_from_instance(self.original_solution, candidate)
@@ -55,6 +59,7 @@ class ALNS:
             self.curr_state, weight = self.choose_next_state_metropolis(met_value, self.curr_state, candidate)
         
         return weight
+
 
     def run(self,
             weights,
