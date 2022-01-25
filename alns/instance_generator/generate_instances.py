@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import instance_generator as ig
 
 from alns.utils import plot_graph
-import alns.operators as ro
+import alns.improvement as ro
 
 from typing import List, Tuple
 

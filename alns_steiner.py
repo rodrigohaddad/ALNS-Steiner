@@ -1,5 +1,5 @@
 from alns import utils
-from alns.operators import greedy_initial_solution
+from alns.improvement import greedy_initial_solution
 from alns.simmulated_annealing import SimulatedAnnealing
 from alns.solution_instance import SolutionInstance
 from math import log

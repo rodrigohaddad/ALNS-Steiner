@@ -1,7 +1,7 @@
 import pickle
 import matplotlib.pyplot as plt
 
-from alns.operators import greedy_initial_solution
+from alns.improvement import greedy_initial_solution
 from alns.utils import plot_graph, evaluate
 
 

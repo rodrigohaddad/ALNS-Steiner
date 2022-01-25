@@ -28,17 +28,13 @@ class SimulatedAnnealing:
 
         self.alns = ALNS(self.initial_solution, self.statistics)
 
-    def apply_alns(self, temp, weights, repair_weights, destroy_weights):
+    def apply_alns(self, temp, weights):
         return self.alns.run(weights,
                              self.alns_decay,
-                             temp,
-                             repair_weights,
-                             destroy_weights)
+                             temp)
 
     def simulate(self) -> Dict[str, nx.Graph]:
         list_temps = list()
-        repair_weights = list()
-        destroy_weights = list()
 
         weights = np.asarray(self.alns_weights, dtype=np.float16)
         curr_temp = self.t_function(0, self.temperature)
@@ -46,14 +42,12 @@ class SimulatedAnnealing:
         temp_iter = 0
         while curr_temp > 0.001:
             for i in range(self.alns_n_iterations):
-                repair_weights, destroy_weights = self.apply_alns(curr_temp,
-                                                                  weights,
-                                                                  repair_weights,
-                                                                  destroy_weights)
-
+                self.apply_alns(curr_temp, weights)
             curr_temp = self.t_function(temp_iter, self.temperature)
             list_temps.append(curr_temp)
             temp_iter += 1
+
+            print(self.alns.destroy_operator.weights, self.alns.repair_operator.weights)
 
         return {
             "initial": self.alns.initial_solution,
