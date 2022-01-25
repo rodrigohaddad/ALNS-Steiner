@@ -1,6 +1,6 @@
 from alns import utils
-from alns.operators import greedy_initial_solution
-from simmulated_annealing import SimulatedAnnealing
+from alns.improvement import greedy_initial_solution
+from alns.simmulated_annealing import SimulatedAnnealing
 from alns.solution_instance import SolutionInstance
 from math import log
 import pickle
@@ -26,7 +26,7 @@ def t_function_3(t: float, t0: float, a=1000, b=2000) -> float:
 
 def main():
     # G = parse_file("data/test.edges")
-    G = pickle.load(open("data/toys/toy_generated-1.pickle", "rb"))
+    G = pickle.load(open("data/toys/toy_generated-4.pickle", "rb"))
 
     initial_solution = greedy_initial_solution(G)
 
