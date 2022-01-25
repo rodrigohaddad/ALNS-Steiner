@@ -174,6 +174,6 @@ class DestroyOperator(Operator):
         return SolutionInstance.new_solution_from_instance(
             current, destroyed)
 
-    classmethod
+    @classmethod
     def __shaw_removal(cls, current: nx.Graph) -> nx.Graph:
         return current
