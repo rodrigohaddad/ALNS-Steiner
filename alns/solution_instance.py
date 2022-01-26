@@ -4,11 +4,20 @@ import networkx as nx
 class SolutionInstance:
     """Object to represent an instance of the Steiner Problem with its solution and value."""
     
+    def __init__(self, instance: nx.Graph, solution: nx.Graph, value=None, instance_nodes=None) -> None:
+        self.__instance = instance
+        self.__instance_nodes = instance_nodes
+        self.__solution = solution
+        self.__value = value
+        if self.__instance_nodes is None:
+            self.__instance_nodes = [n for n in instance.nodes]    
+
     @staticmethod
-    def evaluate(origin_graph: nx.Graph, solution: nx.Graph, origin_nodes=None) -> int:
+    def evaluate(origin_graph: nx.Graph, 
+            solution: nx.Graph, origin_nodes=None) -> int:
         if not origin_nodes:
-            origin_nodes = [n[0] for n in origin_graph.nodes(data=True)]
-        solution_n = [n[0] for n in solution.nodes(data=True)]
+            origin_nodes = [n for n in origin_graph.nodes]
+        solution_n = [n for n in solution.nodes]
         unvisited_nodes = list(set(origin_nodes).difference(solution_n))
 
         cost_edges = sum([e[2]["cost"]
@@ -22,13 +31,8 @@ class SolutionInstance:
     def new_solution_from_instance(cls, prev, solution):
         return cls(prev.instance, solution, None, prev.instance_nodes)
 
-    def __init__(self, instance: nx.Graph, solution: nx.Graph, value=None, instance_nodes=None) -> None:
-        self.__instance = instance
-        self.__instance_nodes = instance_nodes
-        self.__solution = solution
-        self.__value = value
-        if self.__instance_nodes is None:
-            self.__instance_nodes = [n[0] for n in instance.nodes(data=True)]
+    def copy(self):
+        return SolutionInstance(self.instance, self.solution.copy(), self.__value, self.instance_nodes)
 
     @property
     def instance(self):
@@ -39,24 +43,24 @@ class SolutionInstance:
         return self.__instance_nodes
 
     @property
-    def value(self):
+    def value(self) -> int:
         if self.__value is None:
             self.__value = self.evaluate(self.__instance, self.__solution, self.__instance_nodes)
         return self.__value
 
     @property
-    def solution(self):
+    def solution(self) -> nx.Graph:
         return self.__solution  
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         return self.value < other.value
 
-    def __le__(self, other):
+    def __le__(self, other) -> bool:
         return self.value <= other.value
 
-    def __gt__(self, other):
+    def __gt__(self, other) -> bool:
         return self.value > other.value
 
-    def __ge__(self, other):
+    def __ge__(self, other) -> bool:
         return self.value >= other.value
     
