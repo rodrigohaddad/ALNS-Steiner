@@ -40,7 +40,7 @@ class SimulatedAnnealing:
         curr_temp = self.t_function(0, self.temperature)
 
         temp_iter = 0
-        while curr_temp > 0.001:
+        while temp_iter < 100: #curr_temp > 0.001:
             for i in range(self.alns_n_iterations):
                 self.apply_alns(curr_temp, weights)
             curr_temp = self.t_function(temp_iter, self.temperature)

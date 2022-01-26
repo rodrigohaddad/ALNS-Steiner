@@ -4,6 +4,7 @@ from alns.simmulated_annealing import SimulatedAnnealing
 from alns.solution_instance import SolutionInstance
 from math import log
 import pickle
+from matplotlib import pyplot as plt
 
 
 ''' ALNS for Steiner prize collecting problem
@@ -34,7 +35,7 @@ def main():
               't_function': t_function_2,
               'alns_weights': [4, 2.4, 3, 1.5],
               'alns_decay': 0.8,
-              'alns_n_iterations': 50}
+              'alns_n_iterations': 500}
 
     origin_nodes = [n[0] for n in G.nodes(data=True)]
 
@@ -42,7 +43,12 @@ def main():
 
     sa = SimulatedAnnealing(initial_solution=initial_solution, **params)
     result = sa.simulate()
+    utils.plot_graph(G, solution=result['initial'].solution)
+    plt.show()
+    utils.plot_graph(G, solution=result['current'].solution)
+    plt.show()
     utils.plot_graph(G, solution=result['best'].solution)
+    plt.show()
 
 
 if __name__ == "__main__":

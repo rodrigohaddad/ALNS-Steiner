@@ -116,11 +116,14 @@ class RepairOperator(Operator):
         for terminal in terminals_n:
             if terminal not in current.solution:
                 temp = current.copy()
+                list_temp = []
                 for _ in range(max_trials):
                     cls.__connect_pair(temp, terminal, random.choice(list(temp.solution.nodes)))
+                    list_temp.append(temp)
                     if temp < current:
-                        current = temp
                         break
+                current = min(list_temp, key=lambda x: x.value)
+
         return current
 
     @classmethod
