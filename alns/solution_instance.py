@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 from operator import setitem
 import networkx as nx
 
