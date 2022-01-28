@@ -38,7 +38,7 @@ def remove_leaves(G: nx.Graph) -> nx.Graph:
 
 
 def terminal_leaves(G: nx.Graph) -> Tuple[
-    List[Node], List[Edge], nx.Graph]:
+        List[Node], List[Edge], nx.Graph]:
     """
     Merges terminal leaves into nodes. Assumes that
     the only leaves are terminals

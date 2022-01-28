@@ -1,4 +1,3 @@
-
 import random
 import networkx as nx
 from itertools import product
@@ -7,23 +6,34 @@ import numpy as np
 from alns.solution_instance import SolutionInstance
 
 
-
 class Operator:
     """Handles the random choice of the operator method to execute"""
 
     def __init_subclass__(cls, **kwargs):
         # Take the public methods
         cls.operators = [
-            getattr(cls, m) for m in dir(cls) 
+            getattr(cls, m) for m in dir(cls)
             if callable(getattr(cls, m)) and m[0] != '_' and m not in dir(Operator)
         ]
-        num_operators = len(cls.operators)
-        cls.weights = np.ones(num_operators, dtype=np.float16) / num_operators
-        cls.range = np.arange(0, num_operators)
+        cls.num_operators = len(cls.operators)
+        cls.weights = np.ones(cls.num_operators, dtype=np.float16) / cls.num_operators
+        cls.range = np.arange(0, cls.num_operators)
+        cls.count_operators = np.zeros(cls.num_operators, dtype=int)
+        cls.score_operators = np.zeros(cls.num_operators, dtype=int)
         cls.index = None
 
-    def update_weights(self, operator_decay, weight):
-        self.weights[self.index] = self.weights[self.index] * operator_decay + weight * (1 - operator_decay)
+    def update_weights(self, r=.8):
+        for idx in range(self.num_operators):
+            self.weights[idx] = (1 - r) * self.weights[idx] + r * (
+                        self.score_operators[idx] / self.count_operators[idx])
+
+        self.score_operators = np.zeros(self.num_operators, dtype=int)
+        self.count_operators = np.zeros(self.num_operators, dtype=int)
+        self.index = None
+
+    def update_score(self, score):
+        self.score_operators[self.index] += score
+        self.count_operators[self.index] += 1
 
     def __call__(self, *args):
         self.index = np.random.choice(self.range, p=self.weights / np.sum(self.weights))
@@ -36,7 +46,7 @@ class Operator:
 
 
 class RepairOperator(Operator):
-    
+
     @staticmethod
     def __connect_pair(current: SolutionInstance, source: int, target: int) -> None:
         """This function modifies the state graph"""
@@ -44,15 +54,15 @@ class RepairOperator(Operator):
         state = current.solution
         path = nx.dijkstra_path(current.instance, source, target, 'cost')
         for i, node in enumerate(path[1:], 1):
-            prev_node = path[i-1]
-            
+            prev_node = path[i - 1]
+
             if not state.has_node(node):
-                aux = {n:data for n, data in current.instance.nodes(data=True)}
+                aux = {n: data for n, data in current.instance.nodes(data=True)}
                 state.add_node(node, **aux[node])
-            
+
             if state.has_edge(prev_node, node):
                 continue
-            
+
             state.add_edge(prev_node, node, **current.instance[prev_node][node])
 
     @classmethod
@@ -93,7 +103,7 @@ class RepairOperator(Operator):
 
         if len(components) <= 1:
             return current
-        
+
         nodes_in_components = [[n for n in comp] for comp in components]
         for comp in nodes_in_components:
             random.shuffle(comp)
@@ -102,10 +112,10 @@ class RepairOperator(Operator):
         for path in path_list:
             temp = current.copy()
             for i in range(1, len(path)):
-                cls.__connect_pair(temp, path[i-1], path[i])
+                cls.__connect_pair(temp, path[i - 1], path[i])
             if temp < previous:
                 return temp
-        return temp # if no improvement in all possible pairs, act like random_repair
+        return temp  # if no improvement in all possible pairs, act like random_repair
 
     @classmethod
     def terminals_repair(cls, current: SolutionInstance, previous: SolutionInstance, max_trials=5):
@@ -133,7 +143,7 @@ class RepairOperator(Operator):
 
 
 class DestroyOperator(Operator):
-    DEGREE_OF_DESTRUCTION = 0.25
+    DEGREE_OF_DESTRUCTION = 0.15
 
     @classmethod
     def __edges_to_remove(cls, state: nx.Graph) -> int:
@@ -148,12 +158,15 @@ class DestroyOperator(Operator):
                                                 replace=False)
 
         for e in n_edges_to_remove:
-            destroyed.remove_edge(*to_be_destroyed[e])
+            connects_terminal_leaf = [current.instance.nodes(data=True)[to_be_destroyed[e][i]]['terminal']
+                                      and current.instance.degree(to_be_destroyed[e][i]) == 1 for i in range(2)]
+            if not any(connects_terminal_leaf):
+                destroyed.remove_edge(*to_be_destroyed[e])
 
         # Remove isolated nodes (with 0 degree)
         destroyed.remove_nodes_from(
-            [node for node, degree in destroyed.degree 
-                if degree == 0]
+            [node for node, degree in destroyed.degree
+             if degree == 0]
         )
 
         return SolutionInstance.new_solution_from_instance(current, destroyed)
@@ -162,17 +175,25 @@ class DestroyOperator(Operator):
     def worst_removal(cls, current: SolutionInstance, _) -> SolutionInstance:
         """ Removes the most expensive edges """
         destroyed = current.solution.copy()
-        destroy_candidates = sorted(list(destroyed.edges(data=True)),
-                                    key=lambda tup: tup[2]['cost'],
-                                    reverse=True)
+        d_e = list(destroyed.edges(data=True))
+        edges_profit = list()
+        for n1, n2, cost in d_e:
+            prize_n1 = current.instance.nodes(data=True)[n1]['prize']
+            prize_n2 = current.instance.nodes(data=True)[n2]['prize']
+            profit = max(prize_n1, prize_n2) - cost['cost']
+            edges_profit.append((n1, n2, profit))
+
+        destroy_candidates = sorted(edges_profit,
+                                    key=lambda tup: tup[2],
+                                    reverse=False)
 
         for e in range(cls.__edges_to_remove(current.solution)):
             destroyed.remove_edge(*destroy_candidates[e][:2])
 
         # Remove isolated nodes (with 0 degree)
         destroyed.remove_nodes_from(
-            [node for node, degree in 
-                destroyed.degree if degree == 0]
+            [node for node, degree in
+             destroyed.degree if degree == 0]
         )
 
         return SolutionInstance.new_solution_from_instance(
