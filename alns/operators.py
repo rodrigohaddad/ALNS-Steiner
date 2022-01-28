@@ -50,6 +50,10 @@ class Operator:
             self.weights[idx] = (1 - r) * self.weights[idx] + r * (
                         self.score_operators[idx] / self.count_operators[idx])
 
+        self.score_operators = np.zeros(self.num_operators, dtype=int)
+        self.count_operators = np.zeros(self.num_operators, dtype=int)
+        self.index = None
+
     def update_score(self, score):
         self.score_operators[self.index] += score
         self.count_operators[self.index] += 1
