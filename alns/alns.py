@@ -18,7 +18,6 @@ class ALNS:
         self.rnd_state = rnd_state
         self.statistics = statistics
 
-
     @staticmethod
     def choose_next_state_metropolis(metropolis: float,
                                      curr_state,
@@ -27,7 +26,6 @@ class ALNS:
             return candidate_state, utils.ACCEPTED
         return curr_state, utils.REJECTED
 
-
     @staticmethod
     def metropolis(curr_state_eval: float, candidate_eval: float,
                    curr_temp: float) -> float:
@@ -35,34 +33,30 @@ class ALNS:
         met = min(exp(diff / curr_temp), 1)
         return met
 
-
     def decision_candidate(self, candidate, temp):
         met_value = self.metropolis(self.curr_state.value, candidate.value, temp)
 
         if candidate < self.best:
             self.curr_state = self.best = candidate
-            weight = utils.BEST
+            score = utils.BEST
         elif candidate < self.curr_state:
             self.curr_state = candidate
-            weight = utils.BETTER
+            score = utils.BETTER
         else:
-            self.curr_state, weight = self.choose_next_state_metropolis(met_value, self.curr_state, candidate)
-        
-        return weight
+            self.curr_state, score = self.choose_next_state_metropolis(met_value, self.curr_state, candidate)
 
+        return score
 
-    def run(self, weights, operator_decay, temp):
+    def run(self, scores, temp):
 
         destroyed = self.destroy_operator(self.curr_state, self.rnd_state)
         repaired = self.repair_operator(destroyed, self.curr_state)
 
-        weight_index = self.decision_candidate(repaired, temp)
+        score_idx = self.decision_candidate(repaired, temp)
 
-        self.destroy_operator.update_weights(operator_decay, weights[weight_index])
-        self.repair_operator.update_weights(operator_decay, weights[weight_index])
+        self.destroy_operator.update_score(scores[score_idx])
+        self.repair_operator.update_score(scores[score_idx])
 
         self.statistics.add_evaluation_candidate_info(self.curr_state.value)
         self.statistics.add_evaluation_best_info(self.best.value)
 
-        self.statistics.add_destroy_operator_info(self.destroy_operator.name, weight_index)
-        self.statistics.add_repair_operator_info(self.repair_operator.name, weight_index)
