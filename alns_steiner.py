@@ -33,7 +33,7 @@ def main():
 
     params = {'temperature': 250,
               't_function': t_function_2,
-              'alns_weights': [7, 4.4, 2, 0.5],
+              'alns_scores': [7, 3.5, 1, 0],
               'alns_decay': 0.8,
               'alns_n_iterations': 500}
 

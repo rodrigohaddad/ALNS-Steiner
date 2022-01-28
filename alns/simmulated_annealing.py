@@ -1,6 +1,5 @@
 import numpy as np
-import networkx as nx
-from typing import Callable, Dict
+from typing import Callable
 
 from alns.alns import ALNS
 from alns.solution_instance import SolutionInstance
@@ -12,7 +11,7 @@ class SimulatedAnnealing:
                  initial_solution: SolutionInstance,
                  temperature: float,
                  t_function: Callable[[float, float], float],
-                 alns_weights: list,
+                 alns_scores: list,
                  alns_decay: float,
                  alns_n_iterations: int,
                  ):
@@ -22,7 +21,7 @@ class SimulatedAnnealing:
 
         self.statistics = Statistics()
 
-        self.alns_scores = alns_weights
+        self.alns_scores = alns_scores
         self.alns_decay = alns_decay
         self.alns_n_iterations = alns_n_iterations
 

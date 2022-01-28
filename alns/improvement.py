@@ -2,9 +2,8 @@
 import copy
 import random
 import networkx as nx
-from itertools import product
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Tuple
 
 from alns.solution_instance import SolutionInstance
 
