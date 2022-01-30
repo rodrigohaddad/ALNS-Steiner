@@ -1,3 +1,4 @@
+import os
 from alns import utils
 from alns.improvement import greedy_initial_solution
 from alns.simmulated_annealing import SimulatedAnnealing
@@ -13,6 +14,9 @@ An application of adaptive large neighborhood search
 problem optimization.'''
 
 
+FILEPATH = 'data/real_instances'
+
+
 def t_function_1(t: float, t0: float, beta=0.9) -> float:
     return t0 * beta ** t
 
@@ -25,33 +29,48 @@ def t_function_3(t: float, t0: float, a=1000, b=2000) -> float:
     return a / (log(t + b))
 
 
+def _get_instances():
+    for file in os.listdir(FILEPATH):
+        file = os.path.join(FILEPATH, file)
+        if not os.path.isfile(file):
+            continue
+        
+        if file.endswith('pickle'):
+            yield pickle.load(open(file, "rb"))
+
+        elif file.endswith('stp'):
+            yield utils.parse_instance(file)
+
+        elif file.endswith('dat'):
+            yield utils.parse_file(file)
+
+
 def main():
-    # G = parse_file("data/test.edges")
-    G = pickle.load(open("data/toys/toy_generated-4.pickle", "rb"))
+    for G in _get_instances():
 
-    initial_solution = greedy_initial_solution(G)
+        initial_solution = greedy_initial_solution(G)
 
-    params = {'temperature': 250,
-              't_function': t_function_2,
-              'alns_scores': [7, 3.5, 1, 0],
-              'alns_decay': 0.8,
-              'alns_n_iterations': 500}
+        params = {'temperature': 250,
+                't_function': t_function_2,
+                'alns_scores': [7, 3.5, 1, 0],
+                'alns_decay': 0.8,
+                'alns_n_iterations': 500}
 
-    origin_nodes = [n[0] for n in G.nodes(data=True)]
+        origin_nodes = [n[0] for n in G.nodes(data=True)]
 
-    initial_solution = SolutionInstance(G, initial_solution, instance_nodes=origin_nodes)
+        initial_solution = SolutionInstance(G, initial_solution, instance_nodes=origin_nodes)
 
-    sa = SimulatedAnnealing(initial_solution=initial_solution, **params)
-    result = sa.simulate()
-    utils.plot_graph(G, solution=result['initial'].solution)
-    plt.show()
-    utils.plot_graph(G, solution=result['current'].solution)
-    plt.show()
-    utils.plot_graph(G, solution=result['best'].solution)
-    plt.show()
+        sa = SimulatedAnnealing(initial_solution=initial_solution, **params)
+        result = sa.simulate()
+        utils.plot_graph(G, solution=result['initial'].solution)
+        plt.show()
+        utils.plot_graph(G, solution=result['current'].solution)
+        plt.show()
+        utils.plot_graph(G, solution=result['best'].solution)
+        plt.show()
 
-    utils.plot_evals(sa.statistics)
-    plt.show()
+        utils.plot_evals(sa.statistics)
+        plt.show()
 
 
 if __name__ == "__main__":
