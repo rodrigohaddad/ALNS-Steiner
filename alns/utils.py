@@ -9,10 +9,6 @@ ACCEPTED = 2
 REJECTED = 3
 
 
-def is_acceptable(state):
-    return True
-
-
 def plot_graph(G: nx.Graph,
                output='plotgraph.png',
                terminals=True,
@@ -43,6 +39,14 @@ def plot_graph(G: nx.Graph,
     
     if save:
         plt.savefig(output, dpi=200, bbox_inches='tight')
+
+
+def plot_evals(statistics):
+    plt.plot(range(statistics.n_iterations()),
+             statistics.curr_state_evaluations(), label="curr eval", linestyle="-.")
+    plt.plot(range(statistics.n_iterations()),
+             statistics.best_evaluations(), label="best eval", linestyle=":")
+    plt.legend()
 
 
 def parse_file(file_name: str) -> nx.Graph:
