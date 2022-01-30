@@ -2,6 +2,7 @@ import re
 import networkx as nx
 import matplotlib.pyplot as plt
 
+from typing import Any, Dict
 
 BEST = 0
 BETTER = 1
@@ -87,3 +88,70 @@ def parse_file(file_name: str) -> nx.Graph:
 
     return G
 
+
+def parse_instance(file_name: str) -> nx.Graph:
+    """
+    Parses a benchmark file into a
+    nx graph
+    """
+    with open(file_name) as f:
+        text = f.read()
+
+    def get_sections(text: str) -> Dict[str, Any]:
+        """
+        Returns each section in the file
+        """
+        lines = text.split("\n")
+        sections = {}
+        c_section = {}
+        started = False
+        for line in lines:
+            # start of new section
+            if "SECTION" in line:
+                title = line[len("SECTION")+1:]
+                c_section[title] = []
+                started = True
+            # end of section
+            elif "END" in line:
+                sections.update(c_section)
+                c_section = {}
+                started = False
+            # start parsing
+            elif started:
+                c_section[title].append(line)
+        return sections
+
+    sections = get_sections(text)
+
+    def get_graph(sections: Dict[str, Any]) -> nx.Graph:
+        graph = sections["Graph"][2:]
+
+        G = nx.Graph()
+        for _edge in graph:
+            edge = _edge.split(" ")
+            G.add_edge(int(edge[1]), int(edge[2]), 
+                cost=float(edge[3]))
+        return G
+
+    G = get_graph(sections)
+
+    def set_attrs(G: nx.Graph, sections: Dict[str, Any]) ->\
+            Dict[str, Any]:
+        terminals = [section.split(" ") 
+            for section in sections["Terminals"][1:]]
+        terminal_nodes = {int(terminal[1]):float(terminal[2])
+            for terminal in terminals}
+
+        attrs = {}
+        for node in G.nodes:
+            prize = terminal_nodes.get(node, 0)
+            attrs[node] = {
+                "terminal": bool(prize), 
+                "prize": prize
+            }
+
+        nx.set_node_attributes(G, attrs)
+
+    set_attrs(G, sections)
+    
+    return G
