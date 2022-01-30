@@ -224,11 +224,11 @@ class DestroyOperator(Operator):
             return SolutionInstance.new_solution_from_instance(
                 current, destroyed)
 
-        for e in similar_nodes:
-            if not any([current.instance.nodes(data=True)[e[i]]['terminal']
-                        and current.instance.degree(e[i]) == 1 for i in range(2)]):
+        for idx in range(cls.__edges_to_remove(current.solution)):
+            if not any([current.instance.nodes(data=True)[similar_nodes[idx][i]]['terminal']
+                        and current.instance.degree(similar_nodes[idx][i]) == 1 for i in range(2)]):
                 try:
-                    destroyed.remove_edge(*e)
+                    destroyed.remove_edge(*similar_nodes[idx])
                 except NetworkXError:
                     continue
 
