@@ -2,6 +2,9 @@ import random
 import networkx as nx
 from itertools import product
 import numpy as np
+import math
+
+from networkx import NetworkXError
 
 from alns.solution_instance import SolutionInstance
 
@@ -25,7 +28,7 @@ class Operator:
     def update_weights(self, r=.8):
         for idx in range(self.num_operators):
             self.weights[idx] = (1 - r) * self.weights[idx] + r * (
-                        self.score_operators[idx] / self.count_operators[idx])
+                    self.score_operators[idx] / self.count_operators[idx])
 
         self.score_operators = np.zeros(self.num_operators, dtype=int)
         self.count_operators = np.zeros(self.num_operators, dtype=int)
@@ -137,10 +140,6 @@ class RepairOperator(Operator):
 
         return current
 
-    @classmethod
-    def __regret_repair(cls, state: nx.Graph, total_graph: nx.Graph):
-        pass
-
 
 class DestroyOperator(Operator):
     DEGREE_OF_DESTRUCTION = 0.15
@@ -200,5 +199,44 @@ class DestroyOperator(Operator):
             current, destroyed)
 
     @classmethod
-    def __shaw_removal(cls, current: nx.Graph) -> nx.Graph:
-        return current
+    def shaw_removal(cls, current: SolutionInstance, _) -> nx.Graph:
+        destroyed = current.solution.copy()
+        d_e = list(destroyed.edges(data=True))
+        edges_profit = list()
+        for n1, n2, cost in d_e:
+            prize_n1 = current.instance.nodes(data=True)[n1]['prize']
+            prize_n2 = current.instance.nodes(data=True)[n2]['prize']
+            profit = prize_n1 + prize_n2 - cost['cost']
+            edges_profit.append((n1, n2, profit))
+
+        destroy_candidates = sorted(edges_profit,
+                                    key=lambda tup: tup[2],
+                                    reverse=False)
+        similar_nodes = list()
+        for idx in range(len(destroy_candidates) - 1):
+            if math.isclose(destroy_candidates[idx][2],
+                            destroy_candidates[idx + 1][2],
+                            rel_tol=0.07):
+                similar_nodes.append(destroy_candidates[idx][:2])
+                similar_nodes.append(destroy_candidates[idx + 1][:2])
+
+        if not similar_nodes:
+            return SolutionInstance.new_solution_from_instance(
+                current, destroyed)
+
+        for e in similar_nodes:
+            if not any([current.instance.nodes(data=True)[e[i]]['terminal']
+                        and current.instance.degree(e[i]) == 1 for i in range(2)]):
+                try:
+                    destroyed.remove_edge(*e)
+                except NetworkXError:
+                    continue
+
+        # Remove isolated nodes (with 0 degree)
+        destroyed.remove_nodes_from(
+            [node for node, degree in
+             destroyed.degree if degree == 0]
+        )
+
+        return SolutionInstance.new_solution_from_instance(
+            current, destroyed)
