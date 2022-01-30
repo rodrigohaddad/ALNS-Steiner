@@ -50,6 +50,9 @@ def main():
     utils.plot_graph(G, solution=result['best'].solution)
     plt.show()
 
+    utils.plot_evals(sa.statistics)
+    plt.show()
+
 
 if __name__ == "__main__":
     main()

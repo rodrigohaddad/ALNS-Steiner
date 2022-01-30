@@ -56,7 +56,3 @@ class ALNS:
 
         self.destroy_operator.update_score(scores[score_idx])
         self.repair_operator.update_score(scores[score_idx])
-
-        self.statistics.add_evaluation_candidate_info(self.curr_state.value)
-        self.statistics.add_evaluation_best_info(self.best.value)
-

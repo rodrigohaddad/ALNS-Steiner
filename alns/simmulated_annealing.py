@@ -46,13 +46,15 @@ class SimulatedAnnealing:
             list_temps.append(curr_temp)
             temp_iter += 1
 
+            self.statistics.add_destroy_operator_info(self.alns.destroy_operator)
+            self.statistics.add_repair_operator_info(self.alns.repair_operator)
+
+            self.statistics.add_evaluation_info(self.alns)
+
             self.alns.destroy_operator.update_weights(self.alns_decay)
             self.alns.repair_operator.update_weights(self.alns_decay)
 
             print(self.alns.destroy_operator.weights, self.alns.repair_operator.weights)
-
-            # self.statistics.add_destroy_operator_info(self.alns.destroy_operator)
-            # self.statistics.add_repair_operator_info(self.alns.repair_operator)
 
         return {
             "initial": self.alns.initial_solution,
