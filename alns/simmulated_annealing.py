@@ -4,6 +4,7 @@ from typing import Callable
 from alns.alns import ALNS
 from alns.solution_instance import SolutionInstance
 from alns.statistics import Statistics
+from datetime import datetime
 
 
 class SimulatedAnnealing:
@@ -27,9 +28,10 @@ class SimulatedAnnealing:
 
         self.alns = ALNS(self.initial_solution, self.statistics)
 
-    def apply_alns(self, temp, scores):
+    def apply_alns(self, temp, scores, count_no_improvement):
         return self.alns.run(scores,
-                             temp)
+                             temp,
+                             count_no_improvement)
 
     def simulate(self) -> dict:
         list_temps = list()
@@ -38,9 +40,16 @@ class SimulatedAnnealing:
         curr_temp = self.t_function(0, self.temperature)
 
         temp_iter = 0
+        start_time = datetime.now()
         while temp_iter < 100: #curr_temp > 0.001:
+            count_no_improvement = 0
             for i in range(self.alns_n_iterations):
-                self.apply_alns(curr_temp, scores)
+                count_no_improvement = self.apply_alns(curr_temp,
+                                                       scores,
+                                                       count_no_improvement)
+                if count_no_improvement >= 50:
+                    self.statistics.add_no_improvement(i, temp_iter, curr_temp)
+                    break
 
             curr_temp = self.t_function(temp_iter, self.temperature)
             list_temps.append(curr_temp)
@@ -56,6 +65,8 @@ class SimulatedAnnealing:
 
             print(self.alns.destroy_operator.weights, self.alns.repair_operator.weights)
 
+        end_time = datetime.now()
+        self.statistics.add_time_duration(end_time-start_time)
         return {
             "initial": self.alns.initial_solution,
             "best": self.alns.best,
