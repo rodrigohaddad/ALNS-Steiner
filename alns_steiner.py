@@ -18,7 +18,7 @@ An application of adaptive large neighborhood search
 problem optimization.'''
 
 
-FILEPATH = 'data/toys'
+FILEPATH = 'data/real_instances'
 RESULTPATH = 'data/results'
 MAX_PROCESSES = 7
 
