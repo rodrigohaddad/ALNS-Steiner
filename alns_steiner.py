@@ -1,11 +1,12 @@
 import os
-from alns import utils
-from alns.improvement import greedy_initial_solution
+from alns import statistics, utils
+import alns.improvement as imp
 from alns.simmulated_annealing import SimulatedAnnealing
 from alns.solution_instance import SolutionInstance
 from math import log
 import pickle
 from matplotlib import pyplot as plt
+from time import time
 
 
 ''' ALNS for Steiner prize collecting problem
@@ -14,7 +15,8 @@ An application of adaptive large neighborhood search
 problem optimization.'''
 
 
-FILEPATH = 'data/real_instances'
+FILEPATH = 'data/toys'
+RESULTPATH = 'data/results'
 
 
 def t_function_1(t: float, t0: float, beta=0.9) -> float:
@@ -30,47 +32,57 @@ def t_function_3(t: float, t0: float, a=1000, b=2000) -> float:
 
 
 def _get_instances():
-    for file in os.listdir(FILEPATH):
-        file = os.path.join(FILEPATH, file)
+    for filename in os.listdir(FILEPATH):
+        file = os.path.join(FILEPATH, filename)
         if not os.path.isfile(file):
             continue
         
         if file.endswith('pickle'):
-            yield pickle.load(open(file, "rb"))
+            yield pickle.load(open(file, "rb")), filename
 
         elif file.endswith('stp'):
-            yield utils.parse_instance(file)
+            yield utils.parse_instance(file), filename
 
         elif file.endswith('dat'):
-            yield utils.parse_file(file)
+            yield utils.parse_file(file), filename
 
 
 def main():
-    for G in _get_instances():
+    params = {'temperature': 250,
+            't_function': t_function_2,
+            'alns_scores': [7, 3.5, 1, 0],
+            'alns_decay': 0.8,
+            'alns_n_iterations': 500}
+    for G, filename in _get_instances():
 
-        initial_solution = greedy_initial_solution(G)
+        G = imp.remove_leaves(G)
 
-        params = {'temperature': 250,
-                't_function': t_function_2,
-                'alns_scores': [7, 3.5, 1, 0],
-                'alns_decay': 0.8,
-                'alns_n_iterations': 500}
+        results_list = []
+        statistics_list = []
+        timing_list = []
 
-        origin_nodes = [n[0] for n in G.nodes(data=True)]
+        for _ in range(5):
+            t0 = time()
+            initial_solution = SolutionInstance(G, imp.greedy_initial_solution(G))
 
-        initial_solution = SolutionInstance(G, initial_solution, instance_nodes=origin_nodes)
+            sa = SimulatedAnnealing(initial_solution=initial_solution, **params)
+            result = sa.simulate()
+            
+            elapsed = time() - t0
 
-        sa = SimulatedAnnealing(initial_solution=initial_solution, **params)
-        result = sa.simulate()
-        utils.plot_graph(G, solution=result['initial'].solution)
-        plt.show()
-        utils.plot_graph(G, solution=result['current'].solution)
-        plt.show()
-        utils.plot_graph(G, solution=result['best'].solution)
-        plt.show()
+            results_list.append(result)
+            statistics_list.append(statistics_list)
+            timing_list.append(elapsed)
 
-        utils.plot_evals(sa.statistics)
-        plt.show()
+        result_dict = {
+            "results": results_list,
+            "statistics": statistics_list,
+            "timing": timing_list
+        }
+
+        result_filename = os.path.join(RESULTPATH, f'results-{filename}.pickle')
+        with open(result_filename, 'wb') as result_file:
+            pickle.dump(result_dict, result_file)
 
 
 if __name__ == "__main__":
