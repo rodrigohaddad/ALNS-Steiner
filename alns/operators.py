@@ -156,11 +156,14 @@ class DestroyOperator(Operator):
                                                 cls.__edges_to_remove(current.solution),
                                                 replace=False)
 
+        not_terminal_leafs = list()
         for e in n_edges_to_remove:
             connects_terminal_leaf = [current.instance.nodes(data=True)[to_be_destroyed[e][i]]['terminal']
                                       and current.instance.degree(to_be_destroyed[e][i]) == 1 for i in range(2)]
             if not any(connects_terminal_leaf):
-                destroyed.remove_edge(*to_be_destroyed[e])
+                not_terminal_leafs.append(to_be_destroyed[e])
+
+        destroyed.remove_edges_from(not_terminal_leafs)
 
         # Remove isolated nodes (with 0 degree)
         destroyed.remove_nodes_from(
@@ -186,8 +189,11 @@ class DestroyOperator(Operator):
                                     key=lambda tup: tup[2],
                                     reverse=False)
 
+        to_be_destroyed_edges = list()
         for e in range(cls.__edges_to_remove(current.solution)):
-            destroyed.remove_edge(*destroy_candidates[e][:2])
+            to_be_destroyed_edges.append(destroy_candidates[e])
+
+        destroyed.remove_edges_from(to_be_destroyed_edges)
 
         # Remove isolated nodes (with 0 degree)
         destroyed.remove_nodes_from(
@@ -224,13 +230,13 @@ class DestroyOperator(Operator):
             return SolutionInstance.new_solution_from_instance(
                 current, destroyed)
 
+        to_be_destroyed_edges = list()
         for idx in range(cls.__edges_to_remove(current.solution)):
             if not any([current.instance.nodes(data=True)[similar_nodes[idx][i]]['terminal']
                         and current.instance.degree(similar_nodes[idx][i]) == 1 for i in range(2)]):
-                try:
-                    destroyed.remove_edge(*similar_nodes[idx])
-                except NetworkXError:
-                    continue
+                to_be_destroyed_edges.append(similar_nodes[idx])
+
+        destroyed.remove_edges_from(to_be_destroyed_edges)
 
         # Remove isolated nodes (with 0 degree)
         destroyed.remove_nodes_from(
