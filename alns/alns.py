@@ -33,26 +33,33 @@ class ALNS:
         met = min(exp(diff / curr_temp), 1)
         return met
 
-    def decision_candidate(self, candidate, temp):
+    def decision_candidate(self, candidate, temp, count_no_improvement):
         met_value = self.metropolis(self.curr_state.value, candidate.value, temp)
 
         if candidate < self.best:
             self.curr_state = self.best = candidate
             score = utils.BEST
+            count_no_improvement = 0
+            self.statistics.add_improvement_repair_count_op(self.repair_operator)
+            self.statistics.add_improvement_destroy_count_op(self.destroy_operator)
         elif candidate < self.curr_state:
             self.curr_state = candidate
             score = utils.BETTER
+            count_no_improvement += 1
         else:
             self.curr_state, score = self.choose_next_state_metropolis(met_value, self.curr_state, candidate)
+            count_no_improvement += 1
 
-        return score
+        return score, count_no_improvement
 
-    def run(self, scores, temp):
+    def run(self, scores, temp, count_no_improvement):
 
         destroyed = self.destroy_operator(self.curr_state, self.rnd_state)
         repaired = self.repair_operator(destroyed, self.curr_state)
 
-        score_idx = self.decision_candidate(repaired, temp)
+        score_idx, count_no_improvement = self.decision_candidate(repaired, temp, count_no_improvement)
 
         self.destroy_operator.update_score(scores[score_idx])
         self.repair_operator.update_score(scores[score_idx])
+
+        return count_no_improvement
