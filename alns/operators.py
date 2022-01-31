@@ -11,6 +11,12 @@ from alns.solution_instance import SolutionInstance
 
 class Operator:
     """Handles the random choice of the operator method to execute"""
+    def __init__(self) -> None:
+        self.weights = np.ones(self.num_operators, dtype=np.float16) / self.num_operators
+        self.range = np.arange(0, self.num_operators)
+        self.count_operators = np.zeros(self.num_operators, dtype=int)
+        self.score_operators = np.zeros(self.num_operators, dtype=int)
+        self.index = None        
 
     def __init_subclass__(cls, **kwargs):
         # Take the public methods
@@ -19,11 +25,6 @@ class Operator:
             if callable(getattr(cls, m)) and m[0] != '_' and m not in dir(Operator)
         ]
         cls.num_operators = len(cls.operators)
-        cls.weights = np.ones(cls.num_operators, dtype=np.float16) / cls.num_operators
-        cls.range = np.arange(0, cls.num_operators)
-        cls.count_operators = np.zeros(cls.num_operators, dtype=int)
-        cls.score_operators = np.zeros(cls.num_operators, dtype=int)
-        cls.index = None
 
     def update_weights(self, r=.8):
         for idx in range(self.num_operators):
