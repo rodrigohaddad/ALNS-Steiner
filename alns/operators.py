@@ -101,6 +101,13 @@ class RepairOperator(Operator):
 
             state.add_edge(prev_node, node, **current.instance[prev_node][node])
 
+    @staticmethod
+    def __connect_pair(current: SolutionInstance, source: int, target: int) -> None:
+        """This function modifies the state graph"""
+
+        path = nx.dijkstra_path(current.instance, source, target, 'cost')
+        RepairOperator.__merge_path(current, path)
+
     @classmethod
     def random_repair(cls, current: SolutionInstance, *args) -> nx.Graph:
         """This function modifies the current solution"""
@@ -117,7 +124,7 @@ class RepairOperator(Operator):
         source_graph = components[0]
         for comp in components[1:]:
             source = random.choice(list(source_graph.nodes))
-            target = random.choice(list(comp.nodes()))
+            target = random.choice(list(comp.nodes))
 
             cls.__connect_pair(current, source, target)
 
@@ -128,7 +135,7 @@ class RepairOperator(Operator):
         return current
 
     @classmethod
-    def greedy_repair(cls, current: SolutionInstance, previous: SolutionInstance):
+    def _greedy_repair(cls, current: SolutionInstance, previous: SolutionInstance):
 
         state = current.solution
 
@@ -154,9 +161,45 @@ class RepairOperator(Operator):
         return temp  # if no improvement in all possible pairs, act like random_repair
 
     @classmethod
+    def greedy_repair_single_source(cls, current: SolutionInstance, previous: SolutionInstance):
+
+        state = current.solution
+
+        components = [
+            state.subgraph(comp).copy() for comp in sorted(nx.connected_components(state), key=len, reverse=True) if
+            len(comp) >= 2
+        ]
+
+        if len(components) <= 1:
+            return current
+
+        bigger_graph = components[0]
+        for comp in components[1:]:
+            source = random.choice(list(comp.nodes))
+
+            cost, path = nx.single_source_dijkstra(current.instance, source, weight='cost')
+
+            min_value = None
+            min_node = None
+            for key, value in cost.items():
+                if key not in bigger_graph:
+                    continue
+                if min_value is None or value < min_value:
+                    min_value = value
+                    min_node = key
+
+            cls.__merge_path(current, path[min_node])
+
+            bigger_graph = state.subgraph(
+                max(nx.connected_components(state), key=len)
+            )
+
+        return current
+
+    @classmethod
     def terminals_repair(cls, current: SolutionInstance, previous: SolutionInstance, max_trials=5):
         # First connect the graph
-        current = cls.greedy_repair(current, previous)
+        current = cls.greedy_repair_single_source(current, previous)
 
         terminals_n = [n for n, data in current.instance.nodes(data=True) if data['terminal']]
 
