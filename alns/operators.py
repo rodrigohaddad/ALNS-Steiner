@@ -1,4 +1,6 @@
+import csv
 import random
+from time import time
 import networkx as nx
 from itertools import product
 import numpy as np
@@ -14,9 +16,10 @@ class Operator:
     def __init__(self) -> None:
         self.weights = np.ones(self.num_operators, dtype=np.float16) / self.num_operators
         self.range = np.arange(0, self.num_operators)
-        self.count_operators = np.zeros(self.num_operators, dtype=int)
-        self.score_operators = np.zeros(self.num_operators, dtype=int)
-        self.index = None        
+        self.count_operators = np.zeros(self.num_operators, dtype=np.int)
+        self.score_operators = np.zeros(self.num_operators, dtype=np.int)
+        self.index = None
+        self.time_dict = dict()        
 
     def __init_subclass__(cls, **kwargs):
         # Take the public methods
@@ -42,21 +45,50 @@ class Operator:
     def __call__(self, *args):
         self.index = np.random.choice(self.range, p=self.weights / np.sum(self.weights))
         operator = self.operators[self.index]
+        t1 = time()
+        res = operator(*args)
+        t2 = time()
+        elapsed_time = t2 - t1
+        if self.name in self.time_dict:
+            self.time_dict[self.name].append(elapsed_time)
+        else:
+            self.time_dict[self.name] = [t2-t1]
         return operator(*args)
 
     @property
     def name(self):
         return self.operators[self.index].__name__
 
+    def generate_table(self):
+        header = ['Method', 'Total time', 'Number of runs', 'Average time']
+        rows = []
+        for method in self.time_dict.keys():
+            time_list = self.time_dict[method]
+            total_time = sum(time_list)
+            number_of_runs = len(time_list)
+            avg_time = total_time / number_of_runs
+            rows.append([method, total_time, number_of_runs, avg_time])
+        return header, rows
+
+    def save_csv(self, csv_file=None):
+        csv_file = csv_file or f"log_timer_{time()}.csv"
+        header, rows = self.generate_table()
+        print(f"Writing {csv_file}")
+        with open(csv_file, 'w') as filename:
+            writer = csv.writer(filename)
+            writer.writerow(header)
+            writer.writerows(rows)
+
+    # def __del__(self):
+    #     self.save_csv()
+
 
 class RepairOperator(Operator):
 
     @staticmethod
-    def __connect_pair(current: SolutionInstance, source: int, target: int) -> None:
-        """This function modifies the state graph"""
-
+    def __merge_path(current: SolutionInstance, path: list):
         state = current.solution
-        path = nx.dijkstra_path(current.instance, source, target, 'cost')
+
         for i, node in enumerate(path[1:], 1):
             prev_node = path[i - 1]
 
