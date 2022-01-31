@@ -56,7 +56,8 @@ def _process(G, filename, **params):
     statistics_list = []
     timing_list = []
 
-    for _ in range(5):
+    for i in range(5):
+        print(f"RUN {filename} {i+1}/5")
         t0 = time()
         initial_solution = SolutionInstance(G, imp.greedy_initial_solution(G))
 
@@ -87,6 +88,7 @@ def _wait_processes(processes, limit=MAX_PROCESSES):
                 processes.pop(i)
         
         sleep(2)
+
 
 def main():
     params = {'temperature': 250,
