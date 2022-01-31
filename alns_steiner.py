@@ -4,7 +4,7 @@ import pickle
 from tkinter.tix import MAX
 from matplotlib import pyplot as plt
 from time import sleep, time
-import threading
+from multiprocessing import Process
 
 from alns import statistics, utils
 import alns.improvement as imp
@@ -20,7 +20,7 @@ problem optimization.'''
 
 FILEPATH = 'data/toys'
 RESULTPATH = 'data/results'
-MAX_THREADS = 16
+MAX_PROCESSES = 7
 
 
 def t_function_1(t: float, t0: float, beta=0.9) -> float:
@@ -80,11 +80,11 @@ def _process(G, filename, **params):
         pickle.dump(result_dict, result_file)
 
 
-def _wait_threads(threads, limit=MAX_THREADS):
-    while len(threads) >= limit:
-        for i, t in enumerate(threads):
+def _wait_processes(processes, limit=MAX_PROCESSES):
+    while len(processes) >= limit:
+        for i, t in enumerate(processes):
             if not t.is_alive():
-                threads.pop(i)
+                processes.pop(i)
         
         sleep(2)
 
@@ -95,21 +95,21 @@ def main():
             'alns_decay': 0.8,
             'alns_n_iterations': 500}
 
-    threads = []
+    processes = []
     for G, filename in _get_instances():
 
         G = imp.remove_leaves(G)
 
-        if len(threads) >= MAX_THREADS:
-            _wait_threads(threads)
+        if len(processes) >= MAX_PROCESSES:
+            _wait_processes(processes)
 
-        threads.append(
-            threading.Thread(target=_process, args=(G, filename), kwargs=params)
+        processes.append(
+            Process(target=_process, args=(G, filename), kwargs=params)
         )
 
-        threads[-1].start()
+        processes[-1].start()
 
-    _wait_threads(threads, limit=1)
+    _wait_processes(processes, limit=1)
         
 
 if __name__ == "__main__":
