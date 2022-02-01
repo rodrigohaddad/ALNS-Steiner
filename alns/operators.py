@@ -31,8 +31,9 @@ class Operator:
 
     def update_weights(self, r=.8):
         for idx in range(self.num_operators):
-            self.weights[idx] = (1 - r) * self.weights[idx] + r * (
-                    self.score_operators[idx] / self.count_operators[idx])
+            if self.count_operators[idx]:
+                self.weights[idx] = (1 - r) * self.weights[idx] + r * (
+                        self.score_operators[idx] / self.count_operators[idx])
 
         self.score_operators = np.zeros(self.num_operators, dtype=int)
         self.count_operators = np.zeros(self.num_operators, dtype=int)
