@@ -106,7 +106,7 @@ def main():
             _wait_processes(processes)
 
         processes.append(
-            Process(target=_process, args=(G, filename), kwargs=params)
+            Process(target=_process, name=filename, args=(G, filename), kwargs=params)
         )
 
         processes[-1].start()
