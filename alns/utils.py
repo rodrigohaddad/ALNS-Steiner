@@ -14,11 +14,15 @@ def plot_graph(G: nx.Graph,
                output='plotgraph.png',
                terminals=True,
                solution=None,
-               save=True) -> None:
+               save=True,
+               pos=None,
+               title='Plot Graph',
+               show=False) -> None:
     """
     Plots the given graph with its costs
     """
     plt.figure()
+    plt.title(title)
     labels = {g[:-1]: g[-1]["cost"]
               for g in G.edges(data=True)}
 
@@ -26,7 +30,7 @@ def plot_graph(G: nx.Graph,
         node: data['prize'] if data['prize'] != 0 else '' for node, data in G.nodes(data=True)
     }
 
-    pos = nx.spring_layout(G, weight='cost', k=1/len(G), iterations=200)
+    pos = pos or nx.spring_layout(G, weight='cost', k=1/len(G), iterations=200)
     nx.draw_networkx(G, pos=pos, labels=node_labels, node_size=100)
     nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=labels)
     
@@ -37,9 +41,18 @@ def plot_graph(G: nx.Graph,
     if terminals:
         terminals_n = [n for n, data in G.nodes(data=True) if data['terminal']]
         nx.draw_networkx_nodes(G, pos, nodelist=terminals_n, node_color='green')
-    
+
     if save:
-        plt.savefig(output, dpi=200, bbox_inches='tight')
+        fig = plt.gcf()
+        fig.set_size_inches((11, 8.5), forward=False)
+        fig.savefig(output, dpi=500) # Change is over here
+
+    if show:
+        plt.show()
+
+    plt.close()
+
+    return pos
 
 
 def plot_evals(statistics):
