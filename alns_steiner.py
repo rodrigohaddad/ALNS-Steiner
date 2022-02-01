@@ -1,16 +1,26 @@
-from alns import utils
-from alns.improvement import greedy_initial_solution
-from alns.simmulated_annealing import SimulatedAnnealing
-from alns.solution_instance import SolutionInstance
+import os
 from math import log
 import pickle
+from tkinter.tix import MAX
 from matplotlib import pyplot as plt
+from time import sleep, time
+from multiprocessing import Process
+
+from alns import statistics, utils
+import alns.improvement as imp
+from alns.simmulated_annealing import SimulatedAnnealing
+from alns.solution_instance import SolutionInstance
 
 
 ''' ALNS for Steiner prize collecting problem
 An application of adaptive large neighborhood search
 (ALNS) metaheuristics for Steiner prize collecting
 problem optimization.'''
+
+
+FILEPATH = 'data/real_instances'
+RESULTPATH = 'data/results'
+MAX_PROCESSES = 7
 
 
 def t_function_1(t: float, t0: float, beta=0.9) -> float:
@@ -25,34 +35,84 @@ def t_function_3(t: float, t0: float, a=1000, b=2000) -> float:
     return a / (log(t + b))
 
 
+def _get_instances():
+    for filename in os.listdir(FILEPATH):
+        file = os.path.join(FILEPATH, filename)
+        if not os.path.isfile(file):
+            continue
+        
+        if file.endswith('pickle'):
+            yield pickle.load(open(file, "rb")), filename
+
+        elif file.endswith('stp'):
+            yield utils.parse_instance(file), filename
+
+        elif file.endswith('dat'):
+            yield utils.parse_file(file), filename
+
+
+def _process(G, filename, **params):
+    results_list = []
+    statistics_list = []
+    timing_list = []
+
+    for i in range(5):
+        print(f"RUN {filename} {i+1}/5")
+        t0 = time()
+        initial_solution = SolutionInstance(G, imp.greedy_initial_solution(G))
+
+        sa = SimulatedAnnealing(initial_solution=initial_solution, **params)
+        result = sa.simulate()
+        
+        elapsed = time() - t0
+
+        results_list.append(result)
+        statistics_list.append(statistics_list)
+        timing_list.append(elapsed)
+
+    result_dict = {
+        "results": results_list,
+        "statistics": statistics_list,
+        "timing": timing_list
+    }
+
+    result_filename = os.path.join(RESULTPATH, f'results-{filename}.pickle')
+    with open(result_filename, 'wb') as result_file:
+        pickle.dump(result_dict, result_file)
+
+
+def _wait_processes(processes, limit=MAX_PROCESSES):
+    while len(processes) >= limit:
+        for i, t in enumerate(processes):
+            if not t.is_alive():
+                processes.pop(i)
+        
+        sleep(2)
+
+
 def main():
-    # G = parse_file("data/test.edges")
-    G = pickle.load(open("data/toys/toy_generated-4.pickle", "rb"))
-
-    initial_solution = greedy_initial_solution(G)
-
     params = {'temperature': 250,
-              't_function': t_function_2,
-              'alns_scores': [7, 3.5, 1, 0],
-              'alns_decay': 0.8,
-              'alns_n_iterations': 500}
+            't_function': t_function_2,
+            'alns_scores': [7, 3.5, 1, 0],
+            'alns_decay': 0.8,
+            'alns_n_iterations': 500}
 
-    origin_nodes = [n[0] for n in G.nodes(data=True)]
+    processes = []
+    for G, filename in _get_instances():
 
-    initial_solution = SolutionInstance(G, initial_solution, instance_nodes=origin_nodes)
+        G = imp.remove_leaves(G)
 
-    sa = SimulatedAnnealing(initial_solution=initial_solution, **params)
-    result = sa.simulate()
-    utils.plot_graph(G, solution=result['initial'].solution)
-    plt.show()
-    utils.plot_graph(G, solution=result['current'].solution)
-    plt.show()
-    utils.plot_graph(G, solution=result['best'].solution)
-    plt.show()
+        if len(processes) >= MAX_PROCESSES:
+            _wait_processes(processes)
 
-    utils.plot_evals(sa.statistics)
-    plt.show()
+        processes.append(
+            Process(target=_process, name=filename, args=(G, filename), kwargs=params)
+        )
 
+        processes[-1].start()
+
+    _wait_processes(processes, limit=1)
+        
 
 if __name__ == "__main__":
     main()

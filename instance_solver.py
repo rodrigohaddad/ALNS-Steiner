@@ -6,7 +6,7 @@ from alns.solution_instance import SolutionInstance
 from alns.simmulated_annealing import SimulatedAnnealing
 
 
-file_name = "real_instances/cc3-5nu.stp"
+file_name = "data/real_instances/cc3-5nu.stp"
 G = utils.parse_instance(file_name)
 nG = imp.remove_leaves(G)
 print(f"nodes before preprocessing: {len(G)}")

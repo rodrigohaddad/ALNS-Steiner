@@ -1,4 +1,6 @@
+import csv
 import random
+from time import time
 import networkx as nx
 from itertools import product
 import numpy as np
@@ -11,6 +13,13 @@ from alns.solution_instance import SolutionInstance
 
 class Operator:
     """Handles the random choice of the operator method to execute"""
+    def __init__(self) -> None:
+        self.weights = np.ones(self.num_operators, dtype=np.float16) / self.num_operators
+        self.range = np.arange(0, self.num_operators)
+        self.count_operators = np.zeros(self.num_operators, dtype=np.int)
+        self.score_operators = np.zeros(self.num_operators, dtype=np.int)
+        self.index = None
+        self.time_dict = dict()        
 
     def __init_subclass__(cls, **kwargs):
         # Take the public methods
@@ -19,16 +28,12 @@ class Operator:
             if callable(getattr(cls, m)) and m[0] != '_' and m not in dir(Operator)
         ]
         cls.num_operators = len(cls.operators)
-        cls.weights = np.ones(cls.num_operators, dtype=np.float16) / cls.num_operators
-        cls.range = np.arange(0, cls.num_operators)
-        cls.count_operators = np.zeros(cls.num_operators, dtype=int)
-        cls.score_operators = np.zeros(cls.num_operators, dtype=int)
-        cls.index = None
 
     def update_weights(self, r=.8):
         for idx in range(self.num_operators):
-            self.weights[idx] = (1 - r) * self.weights[idx] + r * (
-                    self.score_operators[idx] / self.count_operators[idx])
+            if self.count_operators[idx]:
+                self.weights[idx] = (1 - r) * self.weights[idx] + r * (
+                        self.score_operators[idx] / self.count_operators[idx])
 
         self.score_operators = np.zeros(self.num_operators, dtype=int)
         self.count_operators = np.zeros(self.num_operators, dtype=int)
@@ -41,21 +46,50 @@ class Operator:
     def __call__(self, *args):
         self.index = np.random.choice(self.range, p=self.weights / np.sum(self.weights))
         operator = self.operators[self.index]
+        t1 = time()
+        res = operator(*args)
+        t2 = time()
+        elapsed_time = t2 - t1
+        if self.name in self.time_dict:
+            self.time_dict[self.name].append(elapsed_time)
+        else:
+            self.time_dict[self.name] = [t2-t1]
         return operator(*args)
 
     @property
     def name(self):
         return self.operators[self.index].__name__
 
+    def generate_table(self):
+        header = ['Method', 'Total time', 'Number of runs', 'Average time']
+        rows = []
+        for method in self.time_dict.keys():
+            time_list = self.time_dict[method]
+            total_time = sum(time_list)
+            number_of_runs = len(time_list)
+            avg_time = total_time / number_of_runs
+            rows.append([method, total_time, number_of_runs, avg_time])
+        return header, rows
+
+    def save_csv(self, csv_file=None):
+        csv_file = csv_file or f"log_timer_{time()}.csv"
+        header, rows = self.generate_table()
+        print(f"Writing {csv_file}")
+        with open(csv_file, 'w') as filename:
+            writer = csv.writer(filename)
+            writer.writerow(header)
+            writer.writerows(rows)
+
+    # def __del__(self):
+    #     self.save_csv()
+
 
 class RepairOperator(Operator):
 
     @staticmethod
-    def __connect_pair(current: SolutionInstance, source: int, target: int) -> None:
-        """This function modifies the state graph"""
-
+    def __merge_path(current: SolutionInstance, path: list):
         state = current.solution
-        path = nx.dijkstra_path(current.instance, source, target, 'cost')
+
         for i, node in enumerate(path[1:], 1):
             prev_node = path[i - 1]
 
@@ -67,6 +101,13 @@ class RepairOperator(Operator):
                 continue
 
             state.add_edge(prev_node, node, **current.instance[prev_node][node])
+
+    @staticmethod
+    def __connect_pair(current: SolutionInstance, source: int, target: int) -> None:
+        """This function modifies the state graph"""
+
+        path = nx.dijkstra_path(current.instance, source, target, 'cost')
+        RepairOperator.__merge_path(current, path)
 
     @classmethod
     def random_repair(cls, current: SolutionInstance, *args) -> nx.Graph:
@@ -84,7 +125,7 @@ class RepairOperator(Operator):
         source_graph = components[0]
         for comp in components[1:]:
             source = random.choice(list(source_graph.nodes))
-            target = random.choice(list(comp.nodes()))
+            target = random.choice(list(comp.nodes))
 
             cls.__connect_pair(current, source, target)
 
@@ -95,7 +136,7 @@ class RepairOperator(Operator):
         return current
 
     @classmethod
-    def greedy_repair(cls, current: SolutionInstance, previous: SolutionInstance):
+    def _greedy_repair(cls, current: SolutionInstance, previous: SolutionInstance):
 
         state = current.solution
 
@@ -121,9 +162,45 @@ class RepairOperator(Operator):
         return temp  # if no improvement in all possible pairs, act like random_repair
 
     @classmethod
+    def greedy_repair_single_source(cls, current: SolutionInstance, previous: SolutionInstance):
+
+        state = current.solution
+
+        components = [
+            state.subgraph(comp).copy() for comp in sorted(nx.connected_components(state), key=len, reverse=True) if
+            len(comp) >= 2
+        ]
+
+        if len(components) <= 1:
+            return current
+
+        bigger_graph = components[0]
+        for comp in components[1:]:
+            source = random.choice(list(comp.nodes))
+
+            cost, path = nx.single_source_dijkstra(current.instance, source, weight='cost')
+
+            min_value = None
+            min_node = None
+            for key, value in cost.items():
+                if key not in bigger_graph:
+                    continue
+                if min_value is None or value < min_value:
+                    min_value = value
+                    min_node = key
+
+            cls.__merge_path(current, path[min_node])
+
+            bigger_graph = state.subgraph(
+                max(nx.connected_components(state), key=len)
+            )
+
+        return current
+
+    @classmethod
     def terminals_repair(cls, current: SolutionInstance, previous: SolutionInstance, max_trials=5):
         # First connect the graph
-        current = cls.greedy_repair(current, previous)
+        current = cls.greedy_repair_single_source(current, previous)
 
         terminals_n = [n for n, data in current.instance.nodes(data=True) if data['terminal']]
 

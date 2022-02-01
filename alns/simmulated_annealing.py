@@ -63,7 +63,7 @@ class SimulatedAnnealing:
             self.alns.destroy_operator.update_weights(self.alns_decay)
             self.alns.repair_operator.update_weights(self.alns_decay)
 
-            print(self.alns.destroy_operator.weights, self.alns.repair_operator.weights)
+            # print(self.alns.destroy_operator.weights, self.alns.repair_operator.weights)
 
         end_time = datetime.now()
         self.statistics.add_time_duration(end_time-start_time)
