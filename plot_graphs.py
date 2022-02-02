@@ -9,8 +9,8 @@ ANALYSISPATH = 'data/analysis'
 
 
 def plot_operators_usage(d_count, d_best, r_count, r_best, ana_dir, filename, show=False):
-    fig, (ax1, ax2) = plt.subplots(2, figsize=(6, 9))
-    fig.suptitle(f'Mean # operator applied\n Mean # of bests applied\n{filename}',
+    fig, (ax1, ax2) = plt.subplots(2, figsize=(7, 9))
+    fig.suptitle(f'Mean # operator applied\n Mean # of bests applied\n{filename[8:-7]}',
                  fontsize=12)
     sub_titles = ['Removal operators', 'Repair operators']
     plt.subplots_adjust(hspace=0.3)
@@ -49,6 +49,7 @@ def plot_prize_iteration(y_val, filename, ana_dir, show=False):
                "#3 best", "#4 best",
                "#5 best"], loc="upper right")
     plt.plot(output=os.path.join(ana_dir, "prize-iteration-lines.png"), show=show)
+    print("")
 
 
 def main():
@@ -87,8 +88,8 @@ def main():
 
         plot_operators_usage(d_count_all, pd.DataFrame(d_best_all),
                              r_count_all, pd.DataFrame(r_best_all),
-                             filename,
-                             ana_dir)
+                             ana_dir,
+                             filename)
 
 
 if __name__ == '__main__':
