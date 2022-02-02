@@ -8,6 +8,7 @@ from alns import utils
 
 RESULTPATH = 'data/results'
 ANALYSISPATH = 'data/analysis'
+HEADER = ['Instance', 'Result 1', 'Result 2', 'Result 3', 'Result 4', 'Result 5', 'Avg', 'Std dev', 'Avg time', 'Std dev time']
 
 
 def main(show=False):
