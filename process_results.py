@@ -1,5 +1,7 @@
 import os
 import pickle
+from time import time
+import csv
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -8,14 +10,17 @@ from alns import utils
 
 RESULTPATH = 'data/results'
 ANALYSISPATH = 'data/analysis'
-HEADER = ['Instance', 'Result 1', 'Result 2', 'Result 3', 'Result 4', 'Result 5', 'Avg', 'Std dev', 'Avg time', 'Std dev time']
+HEADER = ['Instance', 'Result 1', 'Result 2', 'Result 3', 'Result 4', 'Result 5', 'Avg', 'Std', 'Avg time', 'Std time', 'Avg initial', 'Std initial']
 
 
-def main(show=False):
+def main(generate_img=False, show=False):
+    rows = []
     for filename in os.listdir(RESULTPATH):
         file = os.path.join(RESULTPATH, filename)
         if not os.path.isfile(file):
             continue
+
+        print(f"Analizing file: {file}")
 
         dir = ''.join(filename.split('.')[:-1])
         ana_dir = os.path.join(ANALYSISPATH, dir)
@@ -28,9 +33,21 @@ def main(show=False):
         statistics = result_dict["statistics"]
         timing = result_dict["timing"]
 
-        print(results[0]['best'].value)
+        values = np.array(list(map(lambda x: x["best"].value, results)))
+        initial_values = np.array(list(map(lambda x: x["initial"].value, results)))
+        rows.append([
+            dir,
+            *values,
+            np.mean(values),
+            np.std(values),
+            np.mean(timing),
+            np.std(timing),
+            np.mean(initial_values),
+            np.std(initial_values)
+        ])
 
-        values = np.array(map(lambda x: x["best"].value, results))
+        if not generate_img:
+            continue
 
         pos = results[0]['initial'].plot(
             output=os.path.join(ana_dir, f"initial.png"),
@@ -39,12 +56,17 @@ def main(show=False):
         )
         for i, res in enumerate(results):
             for t in ['current', 'best']:
-                res[t].plot(
+                pos = res[t].plot(
                     pos=pos,
                     output=os.path.join(ana_dir, f"{t}-{i}.png"),
                     title=f"{t.capitalize()} Solution - Execution {i+1}\nValue: {res[t].value}",
                     show=show)
+    
+    with open(os.path.join(ANALYSISPATH, f'result-analysis-{int(time())}.csv'), 'w') as outfile:
+        writer = csv.writer(outfile)
+        writer.writerow(HEADER)
+        writer.writerows(rows)
 
 
 if __name__ == '__main__':
-    main(False)
+    main(True, False)
