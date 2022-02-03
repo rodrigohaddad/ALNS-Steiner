@@ -3,10 +3,12 @@ import pickle
 from time import time
 import csv
 import numpy as np
+
 from matplotlib import pyplot as plt
 
 from alns import utils
-
+import alns.improvement as imp
+from alns.solution_instance import SolutionInstance
 
 RESULTPATH = 'data/results'
 ANALYSISPATH = 'data/analysis'
@@ -28,6 +30,17 @@ def main(generate_img=False, show=False):
             os.mkdir(ana_dir)
 
         result_dict = pickle.load(open(file, 'rb'))
+
+        graphs = [g["best"] for g in result_dict["results"]]
+        for graphs in result_dict["results"]:
+            g = graphs["best"]
+            for n in g.solution.nodes(data=True):
+                g.solution.nodes[n[0]]["prize"] = g.instance.nodes[n[0]]["prize"]
+                g.solution.nodes[n[0]]["terminal"] = g.instance.nodes[n[0]]["terminal"]
+                
+            G = imp.remove_leaves(g.solution)
+            G = SolutionInstance(g.instance, G)
+            graphs["best"] = G
 
         results = result_dict["results"]
         statistics = result_dict["statistics"]
@@ -69,4 +82,4 @@ def main(generate_img=False, show=False):
 
 
 if __name__ == '__main__':
-    main(True, False)
+    main(False, False)
