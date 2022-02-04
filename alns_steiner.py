@@ -18,7 +18,7 @@ An application of adaptive large neighborhood search
 problem optimization.'''
 
 
-FILEPATH = 'data/real_instances'
+FILEPATH = 'data/to_run'
 RESULTPATH = 'data/results'
 MAX_PROCESSES = 7
 
@@ -37,6 +37,7 @@ def t_function_3(t: float, t0: float, a=1000, b=2000) -> float:
 
 def _get_instances():
     for filename in os.listdir(FILEPATH):
+        print(f"Parsing: {filename}")
         file = os.path.join(FILEPATH, filename)
         if not os.path.isfile(file):
             continue

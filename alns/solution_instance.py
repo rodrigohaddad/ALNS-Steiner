@@ -1,5 +1,6 @@
 import networkx as nx
 
+from alns.utils import plot_graph
 
 class SolutionInstance:
     """Object to represent an instance of the Steiner Problem with its solution and value."""
@@ -33,6 +34,9 @@ class SolutionInstance:
 
     def copy(self):
         return SolutionInstance(self.instance, self.solution.copy(), self.__value, self.instance_nodes)
+
+    def plot(self, output='plotgraph.png', terminals=True, save=True, pos=None, title='Plot Graph', show=False):
+        return plot_graph(self.instance, output, terminals, self.solution, save, pos, title, show)
 
     @property
     def instance(self):

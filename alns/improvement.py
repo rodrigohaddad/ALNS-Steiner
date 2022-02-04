@@ -122,4 +122,4 @@ def greedy_initial_solution(path: nx.Graph,
             best_evaluation = candidate_eval
             best_initial_solution = candidate_solution
 
-    return best_initial_solution
+    return path.subgraph(best_initial_solution).copy()

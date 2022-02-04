@@ -14,11 +14,17 @@ def plot_graph(G: nx.Graph,
                output='plotgraph.png',
                terminals=True,
                solution=None,
-               save=True) -> None:
+               save=True,
+               pos=None,
+               title='Plot Graph',
+               show=False) -> None:
     """
     Plots the given graph with its costs
     """
-    plt.figure()
+    plt.close('all')
+
+    fig, (sub1, sub2) = plt.subplots(ncols=2)
+    fig.suptitle(title)
     labels = {g[:-1]: g[-1]["cost"]
               for g in G.edges(data=True)}
 
@@ -26,20 +32,34 @@ def plot_graph(G: nx.Graph,
         node: data['prize'] if data['prize'] != 0 else '' for node, data in G.nodes(data=True)
     }
 
-    pos = nx.spring_layout(G, weight='cost', k=1/len(G), iterations=200)
-    nx.draw_networkx(G, pos=pos, labels=node_labels, node_size=100)
-    nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=labels)
-    
+    pos = pos or nx.spring_layout(G, weight='cost', k=1/len(G), iterations=200)
+    nx.draw_networkx(G, pos=pos, labels=node_labels, node_size=100, ax=sub1)
+    nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=labels, ax=sub1)
+
     if solution is not None:
         nx.draw_networkx_edges(G, pos,
-            edgelist=solution.edges(), edge_color='r', width=2)
+            edgelist=solution.edges(), edge_color='r', width=2, ax=sub1)
+        nx.draw_networkx(solution, pos=pos, labels=node_labels, node_size=100, ax=sub2)
+        labels = {g[:-1]: g[-1]["cost"]
+            for g in solution.edges(data=True)}
+        nx.draw_networkx_edge_labels(solution, pos=pos, edge_labels=labels, ax=sub2)
+        nx.draw_networkx_edges(solution, pos,
+            edgelist=solution.edges(), edge_color='r', width=2, ax=sub2)
     
     if terminals:
         terminals_n = [n for n, data in G.nodes(data=True) if data['terminal']]
-        nx.draw_networkx_nodes(G, pos, nodelist=terminals_n, node_color='green')
-    
+        nx.draw_networkx_nodes(G, pos, nodelist=terminals_n, node_color='green', ax=sub1)
+        nx.draw_networkx_nodes(solution, pos, nodelist=terminals_n, node_color='green', ax=sub2)
+
     if save:
-        plt.savefig(output, dpi=200, bbox_inches='tight')
+        fig = plt.gcf()
+        fig.set_size_inches((11, 8.5), forward=False)
+        fig.savefig(output, dpi=500) # Change is over here
+
+    if show:
+        plt.show()
+
+    return pos
 
 
 def plot_evals(statistics):

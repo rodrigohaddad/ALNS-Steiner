@@ -217,6 +217,20 @@ class RepairOperator(Operator):
 
         return current
 
+    @classmethod
+    def best_component(cls, current: SolutionInstance, previous: SolutionInstance):
+        """Take the best connected component"""
+
+        state = current.solution
+
+        components = [
+            SolutionInstance.new_solution_from_instance(current, state.subgraph(comp).copy())
+            for comp in sorted(nx.connected_components(state), key=len, reverse=True) 
+            if len(comp) >= 2
+        ]
+
+        return min(components, key=lambda x: x.value)
+
 
 class DestroyOperator(Operator):
     DEGREE_OF_DESTRUCTION = 0.15
